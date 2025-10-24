@@ -21,6 +21,10 @@ public class BikeStationService {
         return repository.findAll();
     }
 
+    public BikeStation createStation(BikeStation station) {
+        return repository.save(station);
+    }
+
     public BikeStation getStation(Long id) {
         return repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Station not found"));
     }

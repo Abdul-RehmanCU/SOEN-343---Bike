@@ -1,5 +1,6 @@
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -12,9 +13,10 @@ const Dashboard = () => {
 
   const riderCards = [
     { 
-      title: 'Find Bikes', 
-      desc: 'Locate nearby stations and check real-time availability', 
+      title: 'Bike Management', 
+      desc: 'Reserve, checkout, and return bikes at stations', 
       primary: true,
+      link: '/bikes',
       icon: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
     },
     { 
@@ -33,9 +35,16 @@ const Dashboard = () => {
 
   const operatorCards = [
     { 
+      title: 'Bike Management', 
+      desc: 'Reserve, checkout, return, and rebalance bikes', 
+      primary: true,
+      link: '/bikes',
+      icon: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+    },
+    { 
       title: 'Stations', 
       desc: 'Monitor and manage docking station network', 
-      primary: true,
+      primary: false,
       icon: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
     },
     { 
@@ -43,12 +52,6 @@ const Dashboard = () => {
       desc: 'Track and maintain bike inventory', 
       primary: false,
       icon: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>
-    },
-    { 
-      title: 'Rebalance', 
-      desc: 'Optimize bike distribution across stations', 
-      primary: false,
-      icon: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
     }
   ];
 
@@ -164,12 +167,21 @@ const Dashboard = () => {
                   <h3 className="text-2xl font-bold mb-3 text-primary-900 dark:text-gray-50 group-hover:text-primary-800 dark:group-hover:text-white transition-colors">{card.title}</h3>
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-7 flex-grow leading-relaxed font-light">{card.desc}</p>
                   
-                  <button className={`${card.primary ? 'btn-primary' : 'btn-secondary'} w-full flex items-center justify-center gap-2 group-hover:gap-4 transition-all`}>
-                    <span>{card.primary ? 'Open Now' : 'View Details'}</span>
-                    <svg className="w-4 h-4 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                  {card.link ? (
+                    <Link to={card.link} className={`${card.primary ? 'btn-primary' : 'btn-secondary'} w-full flex items-center justify-center gap-2 group-hover:gap-4 transition-all`}>
+                      <span>{card.primary ? 'Open Now' : 'View Details'}</span>
+                      <svg className="w-4 h-4 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  ) : (
+                    <button className={`${card.primary ? 'btn-primary' : 'btn-secondary'} w-full flex items-center justify-center gap-2 group-hover:gap-4 transition-all`}>
+                      <span>{card.primary ? 'Open Now' : 'View Details'}</span>
+                      <svg className="w-4 h-4 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>

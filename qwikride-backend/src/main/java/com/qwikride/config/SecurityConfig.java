@@ -22,7 +22,7 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
+            .requestMatchers("/api/auth/**", "/api/bikes/**", "/h2-console/**").permitAll()
             .requestMatchers("/api/operator/**").hasAuthority("OPERATOR")
             .anyRequest().authenticated()
         )

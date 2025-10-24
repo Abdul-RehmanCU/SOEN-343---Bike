@@ -21,6 +21,11 @@ public class BikeStationController {
         return ResponseEntity.ok(stationService.getAllStations());
     }
 
+    @PostMapping("/stations")
+    public ResponseEntity<BikeStation> createStation(@Valid @RequestBody BikeStation station) {
+        return ResponseEntity.ok(stationService.createStation(station));
+    }
+
     @GetMapping("/stations/{id}")
     public ResponseEntity<BikeStation> getStation(@PathVariable Long id) {
         try {
