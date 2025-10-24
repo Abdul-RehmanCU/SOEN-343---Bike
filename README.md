@@ -104,7 +104,7 @@ The `pom.xml` file is Maven's configuration file that contains:
    
    Or on Windows:
    ```bash
-   mvnw.cmd spring-boot:run
+   ./mvnw.cmd spring-boot:run
    ```
 
    **What happens here?**
