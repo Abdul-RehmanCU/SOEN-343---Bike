@@ -206,6 +206,15 @@ The system supports two user roles:
 - `./mvnw test` - Executes all unit tests in the project
 - `./mvnw clean package` - Cleans previous builds and creates a JAR file for deployment
 
+## Diagrams
+
+UML diagrams for the system are available in the `diagrams/` folder:
+
+- **Use Case Diagram** - Shows all actors and their use cases
+- **Sequence Diagrams** - Shows registration, login, and authentication flows
+
+See [diagrams/README.md](diagrams/README.md) for viewing instructions.
+
 ## API Endpoints
 
 ### Authentication
