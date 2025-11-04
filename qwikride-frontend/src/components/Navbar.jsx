@@ -68,61 +68,74 @@ const Navbar = () => {
               )}
             </motion.button>
 
-            {user ? (
-              <>
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3"
-                >
-                  <div className="hidden md:block text-right">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">{user.fullName}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{user.role}</div>
-                  </div>
-                  
-                  <motion.div 
-                    className="relative"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ type: 'spring', stiffness: 400 }}
-                  >
-                    <div className="w-9 h-9 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 shadow-sm">
-                      <span className="text-primary-900 dark:text-gray-100 font-bold text-sm">{user.fullName[0]}</span>
-                    </div>
-                    <motion.div 
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 shadow-sm"
-                    />
-                  </motion.div>
-                  
-                  <motion.button 
-                    onClick={logout} 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-                  >
-                    Logout
-                  </motion.button>
-                </motion.div>
-              </>
-            ) : (
-              <>
-                <Link 
-                  to="/login" 
-                  className="text-gray-700 dark:text-gray-300 hover:text-primary-900 dark:hover:text-white font-medium transition-colors"
-                >
-                  Login
-                </Link>
-                <motion.div 
-                  whileHover={{ scale: 1.05 }} 
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link to="/register" className="btn-primary">
-                    Sign Up
-                  </Link>
-                </motion.div>
-              </>
-            )}
+{user ? (
+  <>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="flex items-center gap-3"
+    >
+      <div className="hidden md:block text-right">
+        <div className="text-sm font-medium text-gray-900 dark:text-white">{user.fullName}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{user.role}</div>
+      </div>
+
+      <motion.div 
+        className="relative"
+        whileHover={{ scale: 1.1 }}
+        transition={{ type: 'spring', stiffness: 400 }}
+      >
+        <div className="w-9 h-9 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 shadow-sm">
+          <span className="text-primary-900 dark:text-gray-100 font-bold text-sm">{user.fullName[0]}</span>
+        </div>
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 shadow-sm"
+        />
+      </motion.div>
+      
+      <motion.button 
+        onClick={logout} 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        Logout
+      </motion.button>
+    </motion.div>
+  </>
+) : (
+  <>
+    <Link 
+      to="/login" 
+      className="text-gray-700 dark:text-gray-300 hover:text-primary-900 dark:hover:text-white font-medium transition-colors"
+    >
+      Login
+    </Link>
+    <motion.div 
+      whileHover={{ scale: 1.05 }} 
+      whileTap={{ scale: 0.95 }}
+    >
+      <Link to="/register" className="btn-primary">
+        Sign Up
+      </Link>
+    </motion.div>
+
+    <motion.div 
+      whileHover={{ scale: 1.05 }} 
+      whileTap={{ scale: 0.95 }}
+    >
+      <Link
+        to="/guest"
+        className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-900 dark:hover:text-white transition-colors rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        Guest
+      </Link>
+    </motion.div>
+  </>
+)}
+
           </div>
         </div>
       </div>

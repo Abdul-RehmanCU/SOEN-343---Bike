@@ -1,9 +1,16 @@
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user } = useAuth();
+
+  const navigate = useNavigate();
+
+  const handleGoGuest = () => {
+    navigate('/guest');
+  };
 
   const pageVariants = {
     initial: { opacity: 0, x: -50 },
@@ -236,9 +243,27 @@ const Dashboard = () => {
             </motion.div>
           ))}
         </motion.div>
-      </div>
-    </motion.div>
-  );
+         
+       {!user && (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6, delay: 1 }}
+    className="flex justify-center mt-10"
+  >
+    <button
+      onClick={handleGoGuest}
+      className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+      <span>Back to Guest Page</span>
+    </button>
+  </motion.div>
+)}
+ </div>
+  </motion.div>
+  )
 };
-
 export default Dashboard;
