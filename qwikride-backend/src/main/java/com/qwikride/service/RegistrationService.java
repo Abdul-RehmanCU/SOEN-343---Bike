@@ -12,16 +12,19 @@ import org.springframework.stereotype.Service;
 public class RegistrationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SupabaseService supabaseService;
 
     public User register(RegistrationRequestDTO dto) {
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
-        
+
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
-        
+
+        supabaseService.createUser(dto.getEmail(), dto.getPassword());
+
         User user = new User();
         user.setFullName(dto.getFullName());
         user.setAddress(dto.getAddress());
@@ -30,7 +33,7 @@ public class RegistrationService {
         user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         user.setPaymentInfo(dto.getPaymentInfo());
         user.setRole(User.UserRole.RIDER);
-        
+
         return userRepository.save(user);
     }
 }

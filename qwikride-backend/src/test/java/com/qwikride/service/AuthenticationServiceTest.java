@@ -29,13 +29,16 @@ class AuthenticationServiceTest {
     // issues
     private JwtUtil jwtUtil;
 
+    @Mock
+    private SupabaseService supabaseService;
+
     private AuthenticationService authenticationService;
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         // initialize a real JwtUtil and construct the service manually
         this.jwtUtil = new JwtUtil();
-        this.authenticationService = new AuthenticationService(userRepository, passwordEncoder, jwtUtil);
+        this.authenticationService = new AuthenticationService(userRepository, passwordEncoder, jwtUtil,supabaseService);
     }
 
     @Test

@@ -26,20 +26,32 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      await authService.register(formData);
-      navigate('/login', { state: { message: 'Account created successfully. Please sign in.' } });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
+  try {
+    const response = await authService.register(formData);
+    
+    if (response.status === 201) {
+      navigate('/login', { 
+        state: { 
+          message: 'Account created successfully. Please sign in.' 
+        } 
+      });
     }
-  };
+  } catch (err) {
+    // Handle specific error messages from backend
+    const errorMessage = err.response?.data?.message || 
+                        err.response?.data || 
+                        'Registration failed. Please try again.';
+    setError(errorMessage);
+    console.error('Registration error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <motion.div
