@@ -31,8 +31,8 @@ const Login = () => {
 
     try {
       const response = await authService.login(formData);
-      const { token, username, fullName, role } = response.data;
-      login(token, { username, fullName, role });
+      const { token, username, fullName, role, id } = response.data;
+      login(token, { username, fullName, role, id });
       navigate('/dashboard');
     } catch {
       setError('Invalid username or password');

@@ -1,32 +1,88 @@
 package com.qwikride.service;
 
 import com.qwikride.event.*;
+import com.qwikride.model.Bike;
+import com.qwikride.model.RideHistory;
+import com.qwikride.repository.BikeRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
+/**
+ * Service that listens to domain events and persists ride history.
+ * Implements Observer Pattern via EventSubscriber interface.
+ */
 @Service
+@RequiredArgsConstructor
 public class HistoryService implements EventSubscriber {
+    private final RideHistoryService rideHistoryService;
+    private final BikeRepository bikeRepository;
+
     @Override
+    @Transactional
     public void onEvent(DomainEvent event) {
         if (event instanceof TripStartedEvent) {
-            TripStartedEvent tripStartedEvent = (TripStartedEvent) event;
-            System.out.println("History Service: Trip started for bike " + tripStartedEvent.getBikeId() + 
-                             ", user " + tripStartedEvent.getUserId() + 
-                             ", station " + tripStartedEvent.getStationId());
-            // Here you would log the start of a trip to a ride history database
+            handleTripStarted((TripStartedEvent) event);
         } else if (event instanceof TripEndedEvent) {
-            TripEndedEvent tripEndedEvent = (TripEndedEvent) event;
-            System.out.println("History Service: Trip ended for bike " + tripEndedEvent.getBikeId() + 
-                             ", user " + tripEndedEvent.getUserId() + 
-                             ", duration: " + tripEndedEvent.getDurationMinutes() + " min, " +
-                             "distance: " + tripEndedEvent.getDistanceKm() + " km, " +
-                             "cost: $" + tripEndedEvent.getCost());
-            // Here you would log the end of a trip, calculate statistics, etc.
+            handleTripEnded((TripEndedEvent) event);
         } else if (event instanceof BikeMovedEvent) {
-            BikeMovedEvent bikeMovedEvent = (BikeMovedEvent) event;
-            System.out.println("History Service: Bike " + bikeMovedEvent.getBikeId() + 
-                             " moved from station " + bikeMovedEvent.getOldStationId() + 
-                             " to station " + bikeMovedEvent.getNewStationId() + 
-                             " by operator " + bikeMovedEvent.getOperatorId());
+            handleBikeMoved((BikeMovedEvent) event);
         }
+    }
+
+    /**
+     * Handle trip started event - create a new ride history entry.
+     */
+    private void handleTripStarted(TripStartedEvent event) {
+        Optional<Bike> bikeOpt = bikeRepository.findById(event.getBikeId());
+        String bikeType = bikeOpt.map(bike -> bike.getType() != null ? bike.getType().name() : "UNKNOWN")
+                                  .orElse("UNKNOWN");
+
+        rideHistoryService.createRideHistory(
+            event.getBikeId(),
+            event.getUserId(),
+            event.getStationId(),
+            bikeType
+        );
+
+        System.out.println("History Service: Trip started for bike " + event.getBikeId() + 
+                         ", user " + event.getUserId() + 
+                         ", station " + event.getStationId());
+    }
+
+    /**
+     * Handle trip ended event - update ride history entry.
+     */
+    private void handleTripEnded(TripEndedEvent event) {
+        // Find the in-progress ride for this user
+        Optional<RideHistory> inProgressRide = rideHistoryService.findInProgressRide(event.getUserId());
+        
+        if (inProgressRide.isPresent()) {
+            rideHistoryService.updateRideHistory(
+                inProgressRide.get().getId(),
+                event.getReturnStationId(),
+                event.getDurationMinutes(),
+                event.getDistanceKm(),
+                event.getCost()
+            );
+        }
+
+        System.out.println("History Service: Trip ended for bike " + event.getBikeId() + 
+                         ", user " + event.getUserId() + 
+                         ", duration: " + event.getDurationMinutes() + " min, " +
+                         "distance: " + event.getDistanceKm() + " km, " +
+                         "cost: $" + event.getCost());
+    }
+
+    /**
+     * Handle bike moved event - log for audit purposes.
+     */
+    private void handleBikeMoved(BikeMovedEvent event) {
+        System.out.println("History Service: Bike " + event.getBikeId() + 
+                         " moved from station " + event.getOldStationId() + 
+                         " to station " + event.getNewStationId() + 
+                         " by operator " + event.getOperatorId());
     }
 }

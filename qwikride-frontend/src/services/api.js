@@ -22,4 +22,29 @@ export const authService = {
   login: (credentials) => api.post('/auth/login', credentials),
 };
 
+export const rideHistoryService = {
+  getUserRideHistory: (userId, filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.bikeType) params.append('bikeType', filters.bikeType);
+    if (filters.page) params.append('page', filters.page);
+    if (filters.size) params.append('size', filters.size);
+    
+    return api.get(`/history/user/${userId}?${params.toString()}`);
+  },
+  getAllRideHistories: (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.bikeType) params.append('bikeType', filters.bikeType);
+    
+    return api.get(`/history/all?${params.toString()}`);
+  },
+  getRideHistoryById: (id) => api.get(`/history/${id}`),
+  getRideStatistics: (userId) => api.get(`/history/user/${userId}/statistics`),
+};
+
 export default api;

@@ -30,7 +30,8 @@ public class AuthenticationService {
                 token,
                 user.getUsername(),
                 user.getFullName(),
-                user.getRole().name()
+                user.getRole().name(),
+                user.getId()
         );
     }
 }

@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import BikeManagement from './pages/BikeManagement';
+import RideHistory from './pages/RideHistory';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -47,6 +48,14 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <BikeManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <RideHistory />
             </ProtectedRoute>
           }
         />
