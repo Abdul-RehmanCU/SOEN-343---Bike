@@ -1,26 +1,39 @@
 @startuml
-title PRC — Combined Activity (Return → Bill → Pay / Export / Dispute)
+title PRC — Combined Activity (Return → Bill → Pay / Export / Dispute)\n(Strategy + Chain of Responsibility shown)
 
 skinparam ArrowColor #555
 skinparam ActivityBackgroundColor #F9FBFF
 skinparam ActivityBorderColor #88A
+skinparam linetype ortho
+skinparam shadowing false
 
 start
 
 partition "Trip Service (Stations/Apps)" {
   :Bike returned at dock;
-  :Emit TripCompletion event;
+  :Emit TripCompleted event;
 }
 
 partition "PRC System" {
-  :Accept TripCompletion event;
+  :Accept TripCompleted event;
   :Fetch trip facts (start/end,\nstations, bikeId, isEbike, riderId);
-  :Select PricingPlanVersion (by effectiveDate);
+  :Resolve effectiveDate & membership;
 
   note right
-  Strategy: pick plan version
-  CoR: apply pricing rules in order
-  (base → per-minute → e-bike surcharge)
+  <<Strategy>>
+  Select PricingPlanVersion (planVersionId)
+  based on effectiveDate, city, membership
+  end note
+
+  :Select PricingPlanVersion (planVersionId);
+
+  note right
+  <<Chain of Responsibility>>
+  Execute pricing handlers in order:
+  1) BaseFeeHandler
+  2) PerMinuteHandler
+  3) EbikeSurchargeHandler
+  (optional) Discount/Cap/Tax
   end note
 
   :Apply pricing rules deterministically;
@@ -34,9 +47,9 @@ partition "Notification Service" {
   :Deliver trip summary;
 }
 
-' ——— Independent post-billing flows (may occur anytime) ———
+' -------- Independent post-billing flows (can occur anytime) --------
 fork
-  ' Rider views billing (optional)
+  ' View Billing (optional)
   partition Rider {
     :Open Billing History;
   }
@@ -45,20 +58,19 @@ fork
     :Render billing items\n(start/end, bike, stations, charges, total, status);
   }
 fork again
-  ' Rider settles payment (optional)
+  ' Settle Payment (optional)
   partition Rider {
-    :Click “Pay now”;
+    :Click "Pay now";
   }
   partition "PRC System" {
     if (Balance > 0?) then (yes)
       :Create PaymentIntent;
     else (no)
-      :Show “No payment due”;
-      detach
+      :Show "No payment due";
     endif
   }
   partition "External Payment Gateway" {
-    :Authorize/confirm payment;
+    :Authorize / confirm payment;
   }
   partition "PRC System" {
     if (Payment confirmed?) then (yes)
@@ -73,7 +85,7 @@ fork again
     :Deliver receipt / status;
   }
 fork again
-  ' Admin exports (optional)
+  ' Export (optional)
   partition Admin {
     :Select export date range;
   }
@@ -83,7 +95,7 @@ fork again
     :Provide download;
   }
 fork again
-  ' Dispute flow (optional)
+  ' Dispute (optional)
   partition Rider {
     :Submit dispute for a trip;
   }
@@ -91,7 +103,7 @@ fork again
     :Create DisputeTicket;
   }
   partition Admin {
-    :Review trip/station logs;
+    :Review trip & station logs, evidence;
     if (Approved?) then (yes)
       :Approve adjustment;
     else (no)
@@ -101,7 +113,7 @@ fork again
   partition "PRC System" {
     if (Approved?) then (yes)
       :Compute adjustment;
-      :Post Adjustment LedgerEntry\n(does not alter original);
+      :Post Adjustment LedgerEntry\n(immutable; original not altered);
       :Send dispute resolution (Approved);
     else (no)
       :Send dispute resolution (Rejected);

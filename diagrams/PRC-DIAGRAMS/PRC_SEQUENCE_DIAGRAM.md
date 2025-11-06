@@ -1,5 +1,5 @@
 @startuml
-title PRC — End-to-End Sequence (Return → Bill → Pay)
+title PRC — End-to-End Sequence (Return → Bill → Pay)\n(Strategy + CoR explicit)
 
 actor Rider
 boundary "Station (Dock/App)" as Station
@@ -17,15 +17,16 @@ Station -> PRC : TripCompleted(startTime,endTime,\nstartStationId,endStationId,b
 PRC -> Plans : getActivePlanVersion(effectiveDate)
 Plans --> PRC : planVersionId, rates
 
-group Pricing (deterministic)
-  PRC -> PRC : Strategy.selectPlan(planVersionId)\nCoR.applyRules(base→perMin→eBike)
+group Pricing
+  PRC -> PRC : selectPlan(planVersionId, membership)\n<<Strategy>>
+  PRC -> PRC : applyRules(base→perMin→eBike[→discount/cap/tax])\n<<Chain of Responsibility>>
 end
 
 PRC -> PRC : buildTripSummary(duration,charges[],total)
 PRC -> Ledger : createLedgerEntry(planVersionId,\ncharges[],total,status=pending)
 Ledger --> PRC : ledgerEntryId
 
-PRC -> Notify : sendTripSummary(riderId,summary)
+PRC -> Notify : sendTripSummary(riderId, summary)
 Notify --> Rider : Trip summary delivered
 
 == Rider views billing ==
@@ -44,7 +45,7 @@ opt Rider clicks "Pay Now"
 
   alt Balance > 0
     PRC -> Pay : createAndConfirmPayment(intentPayload)
-    Pay --> PRC : paymentResult(status="CONFIRMED", transactionId)
+    Pay --> PRC : paymentResult(CONFIRMED, transactionId)
 
     alt Payment confirmed
       PRC -> Ledger : markEntriesPaid(riderId, transactionId)\n+ storeReceiptLink()
@@ -52,10 +53,10 @@ opt Rider clicks "Pay Now"
       PRC -> Notify : sendReceipt(riderId, receiptLink)
       Notify --> Rider : Receipt delivered
     else Payment failed
-      PRC -> UI : paymentStatus("FAILED", reason)
+      PRC -> UI : paymentStatus(FAILED, reason)
     end
   else No balance due
-    PRC -> UI : paymentStatus("NONE_DUE")
+    PRC -> UI : paymentStatus(NONE_DUE)
   end
 end
 @enduml

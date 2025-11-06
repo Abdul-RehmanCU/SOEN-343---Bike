@@ -1,5 +1,5 @@
 @startuml
-title PRC — Pricing & Billing (Use Case Overview)
+title PRC — Pricing & Billing (Use Case Overview)\n(Strategy + CoR highlighted)
 
 left to right direction
 skinparam packageStyle rectangle
@@ -8,6 +8,7 @@ skinparam usecase {
   BackgroundColor #EEF3FF
   ArrowColor #555
 }
+skinparam shadowing false
 
 ' === Actors ===
 actor Rider
@@ -27,7 +28,9 @@ rectangle "PRC System" as PRC {
   (UC-PRC-06\nDownload Receipts & Ledger) as UC6
   (UC-PRC-07\nDispute Trip Charge) as UC7
 
-  ' Reusable subflows (no stereotypes on nodes)
+  ' Internal reusable subflows
+  (Select Pricing Plan) as SelPlan
+  (Apply Pricing Rules) as ApplyRules
   (Generate Trip Summary) as GenSummary
   (Create Ledger Entry) as Ledger
   (Notify Rider) as NotifyUC
@@ -45,27 +48,36 @@ Admin -- UC5
 Admin -- UC6
 Admin -- UC7
 
-' === Includes (shared internal behavior) ===
-UC1 ..> GenSummary : <<include>>
-UC1 ..> Ledger     : <<include>>
-UC1 ..> NotifyUC   : <<include>>
+' === Includes ===
+UC1 ..> SelPlan     : <<include>>
+UC1 ..> ApplyRules  : <<include>>
+UC1 ..> GenSummary  : <<include>>
+UC1 ..> Ledger      : <<include>>
+UC1 ..> NotifyUC    : <<include>>
 
-UC4 ..> Ledger     : <<include>>
-UC4 ..> NotifyUC   : <<include>>
+UC4 ..> Ledger      : <<include>>
+UC4 ..> NotifyUC    : <<include>>
 
-UC7 ..> Adj        : <<include>>
-UC7 ..> Ledger     : <<include>>
-UC7 ..> NotifyUC   : <<include>>
+UC7 ..> Adj         : <<include>>
+UC7 ..> Ledger      : <<include>>
+UC7 ..> NotifyUC    : <<include>>
 
-' === External service collaborations ===
+' === External collaborations ===
 Payment -- UC4
 Notifier -- NotifyUC
 
-' === Notes ===
-note right of UC1
-Uses Strategy to select pricing plan
-and Chain of Responsibility to apply rules
-(base, per-minute, e-bike surcharge).
+' === Notes for patterns ===
+note right of SelPlan
+<<Strategy>>
+Resolve planVersionId based on
+effectiveDate, city, membership
+end note
+
+note right of ApplyRules
+<<Chain of Responsibility>>
+Handlers:
+BaseFee → PerMinute → Ebike
+(+ optional Discount/Cap/Tax)
 end note
 
 note bottom of UC5
