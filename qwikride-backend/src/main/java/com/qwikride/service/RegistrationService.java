@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 public class RegistrationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SupabaseService supabaseService;
 
     public User register(RegistrationRequestDTO dto) {
         if (userRepository.existsByUsername(dto.getUsername())) {
@@ -23,7 +22,6 @@ public class RegistrationService {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        supabaseService.createUser(dto.getEmail(), dto.getPassword());
 
         User user = new User();
         user.setFullName(dto.getFullName());

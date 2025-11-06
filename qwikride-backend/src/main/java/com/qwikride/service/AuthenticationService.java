@@ -16,23 +16,12 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final SupabaseService supabaseService;
 
     public LoginResponseDTO authenticate(LoginRequestDTO dto) {
         User user = userRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
-        boolean authenticated = false;
-        try {
-            // Try Supabase sign-in using stored email
-            supabaseService.signIn(user.getEmail(), dto.getPassword());
-            authenticated = true;
-        } catch (Exception ex) {
-            // Fallback to local bcrypt check
-            authenticated = passwordEncoder.matches(dto.getPassword(), user.getPasswordHash());
-        }
-
-        if (!authenticated) {
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
@@ -45,13 +34,9 @@ public class AuthenticationService {
                 user.getRole().name(),
                 user.getId()
         );
-
-        return new LoginResponseDTO(token, user.getUsername(), user.getFullName(), user.getRole().name());
     }
 
-    // ✅ New registration method
     public void register(RegistrationRequestDTO dto) {
-        // 1. Prevent duplicate emails or usernames
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email already in use");
         }
@@ -59,14 +44,6 @@ public class AuthenticationService {
             throw new IllegalArgumentException("Username already taken");
         }
 
-        try {
-            // 2. Create user in Supabase (for consistency with your login flow)
-            supabaseService.createUser(dto.getEmail(), dto.getPassword());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to register user in Supabase: " + e.getMessage());
-        }
-
-        // 3. Save in local database
         User user = new User();
         user.setFullName(dto.getFullName());
         user.setAddress(dto.getAddress());

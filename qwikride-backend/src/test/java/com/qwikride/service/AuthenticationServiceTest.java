@@ -25,20 +25,14 @@ class AuthenticationServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    // Use a real JwtUtil instance in tests to avoid inline-mock instrumentation
-    // issues
     private JwtUtil jwtUtil;
-
-    @Mock
-    private SupabaseService supabaseService;
 
     private AuthenticationService authenticationService;
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        // initialize a real JwtUtil and construct the service manually
         this.jwtUtil = new JwtUtil();
-        this.authenticationService = new AuthenticationService(userRepository, passwordEncoder, jwtUtil,supabaseService);
+        this.authenticationService = new AuthenticationService(userRepository, passwordEncoder, jwtUtil);
     }
 
     @Test
