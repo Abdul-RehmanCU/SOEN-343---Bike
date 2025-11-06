@@ -1,5 +1,5 @@
 @startuml
-title PRC — Combined Activity (Return → Bill → Pay / Export / Dispute)\n(Strategy + Chain of Responsibility shown)
+title PRC — Combined Activity (Return → Bill → Pay / Export / Dispute)
 
 skinparam ArrowColor #555
 skinparam ActivityBackgroundColor #F9FBFF

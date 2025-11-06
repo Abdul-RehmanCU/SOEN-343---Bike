@@ -1,5 +1,5 @@
 @startuml
-title PRC — End-to-End Sequence (Return → Bill → Pay)\n(Strategy + CoR explicit)
+title PRC — End-to-End Sequence (Return → Bill → Pay)
 
 actor Rider
 boundary "Station (Dock/App)" as Station

@@ -1,5 +1,5 @@
 @startuml
-title PRC — Pricing & Billing (Use Case Overview)\n(Strategy + CoR highlighted)
+title PRC — Pricing & Billing (Use Case Overview)
 
 left to right direction
 skinparam packageStyle rectangle
