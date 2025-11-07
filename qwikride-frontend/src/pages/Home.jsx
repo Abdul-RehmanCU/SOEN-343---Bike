@@ -243,7 +243,7 @@ const Home = () => {
             {previewError && (
               <p className="mb-6 text-center text-sm text-red-600 dark:text-red-400">{previewError}</p>
             )}
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="flex flex-col items-center gap-8 md:flex-row md:justify-center md:gap-10">
               {(previewPlans.length > 0 ? previewPlans : [
                 {
                   planVersionId: 'placeholder-casual',
@@ -269,7 +269,7 @@ const Home = () => {
               ]).map((plan) => (
                 <div
                   key={plan.planVersionId}
-                  className="rounded-2xl border border-gray-200 p-6 shadow-sm transition hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                  className="w-full max-w-sm rounded-2xl border border-gray-200 p-6 shadow-sm transition hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
                 >
                   <h3 className="text-2xl font-semibold text-center">{plan.planName}</h3>
                   <p className="mt-4 text-center text-3xl font-bold">{formatMoney(plan.baseFee)}</p>

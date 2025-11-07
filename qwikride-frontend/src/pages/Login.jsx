@@ -4,7 +4,8 @@ import { authService } from '../services/api';
 import { useAuth } from '../hooks/useAuth.js';
 import { motion } from 'framer-motion';
 import { PAGE_VARIANTS } from '../constants/animations';
-import { GridBackground, AnimatedBlob, LoadingSpinner, Alert } from '../components';
+import { LoadingSpinner, Alert } from '../components';
+import GuestHomeLink from '../components/GuestHomeLink';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -46,8 +47,19 @@ const Login = () => {
       transition={{ duration: 0.4, ease: 'easeInOut' }}
       className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden"
     >
-      <GridBackground />
-      <AnimatedBlob position={{ top: '33%', right: '33%' }} movement={{ x: [0, 30, 0], y: [0, -20, 0] }} />
+      <GuestHomeLink className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:48px_48px] dark:bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)]"></div>
+      
+      <motion.div 
+        animate={{ 
+          scale: [1, 1.15, 1], 
+          opacity: [0.3, 0.5, 0.3],
+          x: [0, 30, 0],
+          y: [0, -20, 0]
+        }}
+        transition={{ duration: 10, repeat: Infinity }}
+        className="absolute top-1/3 right-1/3 w-[450px] h-[450px] bg-gradient-to-br from-gray-500/35 via-gray-400/25 to-transparent dark:from-gray-400/45 dark:via-gray-300/30 blur-3xl rounded-full"
+      />
       
       <div className="max-w-lg w-full relative z-10">
         <motion.div

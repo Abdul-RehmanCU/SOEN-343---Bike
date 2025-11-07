@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { prcService, pricingAdminService } from '../services/api';
+import GuestHomeLink from '../components/GuestHomeLink';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -629,8 +630,9 @@ const Pricing = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen px-4 sm:px-6 lg:px-8 py-8"
+      className="relative min-h-screen px-4 sm:px-6 lg:px-8 py-8"
     >
+      <GuestHomeLink className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
       <div className="max-w-7xl mx-auto space-y-12">
         <header className="space-y-3">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Pricing & Billing</h1>
