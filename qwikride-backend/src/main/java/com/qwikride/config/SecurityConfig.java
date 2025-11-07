@@ -27,8 +27,16 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/bikes/**", "/h2-console/**").permitAll()
+                        // Public endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/bikes/station/*/available", "/api/bikes/station/*").permitAll()
+                        
+                        // Operator-only endpoints
+                        .requestMatchers("/api/bikes/create", "/api/bikes/move", "/api/bikes/expired-reservations/process").hasAuthority("OPERATOR")
                         .requestMatchers("/api/operator/**").hasAuthority("OPERATOR")
+                        
+                        // Authenticated user endpoints
+                        .requestMatchers("/api/bikes/**").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
