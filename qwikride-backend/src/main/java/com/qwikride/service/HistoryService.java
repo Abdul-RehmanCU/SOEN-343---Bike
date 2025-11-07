@@ -5,6 +5,7 @@ import com.qwikride.model.Bike;
 import com.qwikride.model.RideHistory;
 import com.qwikride.repository.BikeRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
  * Service that listens to domain events and persists ride history.
  * Implements Observer Pattern via EventSubscriber interface.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HistoryService implements EventSubscriber {
@@ -32,9 +34,6 @@ public class HistoryService implements EventSubscriber {
         }
     }
 
-    /**
-     * Handle trip started event - create a new ride history entry.
-     */
     private void handleTripStarted(TripStartedEvent event) {
         Optional<Bike> bikeOpt = bikeRepository.findById(event.getBikeId());
         String bikeType = bikeOpt.map(bike -> bike.getType() != null ? bike.getType().name() : "UNKNOWN")
@@ -47,16 +46,11 @@ public class HistoryService implements EventSubscriber {
             bikeType
         );
 
-        System.out.println("History Service: Trip started for bike " + event.getBikeId() + 
-                         ", user " + event.getUserId() + 
-                         ", station " + event.getStationId());
+        log.info("Trip started - bike: {}, user: {}, station: {}", 
+                event.getBikeId(), event.getUserId(), event.getStationId());
     }
 
-    /**
-     * Handle trip ended event - update ride history entry.
-     */
     private void handleTripEnded(TripEndedEvent event) {
-        // Find the in-progress ride for this user
         Optional<RideHistory> inProgressRide = rideHistoryService.findInProgressRide(event.getUserId());
         
         if (inProgressRide.isPresent()) {
@@ -69,20 +63,14 @@ public class HistoryService implements EventSubscriber {
             );
         }
 
-        System.out.println("History Service: Trip ended for bike " + event.getBikeId() + 
-                         ", user " + event.getUserId() + 
-                         ", duration: " + event.getDurationMinutes() + " min, " +
-                         "distance: " + event.getDistanceKm() + " km, " +
-                         "cost: $" + event.getCost());
+        log.info("Trip ended - bike: {}, user: {}, duration: {}min, distance: {}km, cost: ${}", 
+                event.getBikeId(), event.getUserId(), event.getDurationMinutes(), 
+                event.getDistanceKm(), event.getCost());
     }
 
-    /**
-     * Handle bike moved event - log for audit purposes.
-     */
     private void handleBikeMoved(BikeMovedEvent event) {
-        System.out.println("History Service: Bike " + event.getBikeId() + 
-                         " moved from station " + event.getOldStationId() + 
-                         " to station " + event.getNewStationId() + 
-                         " by operator " + event.getOperatorId());
+        log.info("Bike moved - bike: {}, from station: {}, to station: {}, operator: {}", 
+                event.getBikeId(), event.getOldStationId(), 
+                event.getNewStationId(), event.getOperatorId());
     }
 }

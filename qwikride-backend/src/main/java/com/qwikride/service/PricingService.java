@@ -3,7 +3,9 @@ package com.qwikride.service;
 import com.qwikride.event.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PricingService implements EventSubscriber {
@@ -26,13 +28,12 @@ public class PricingService implements EventSubscriber {
     public void onEvent(DomainEvent event) {
         if (event instanceof TripEndedEvent) {
             TripEndedEvent tripEndedEvent = (TripEndedEvent) event;
-            System.out.println("Pricing Service: Trip ended for bike " + tripEndedEvent.getBikeId() +
-                               ", user " + tripEndedEvent.getUserId() +
-                               ", cost: $" + tripEndedEvent.getCost());
-            // Here you would implement actual pricing logic, update user balance, etc.
+            log.info("Trip cost calculated - bike: {}, user: {}, cost: ${}", 
+                    tripEndedEvent.getBikeId(), tripEndedEvent.getUserId(), tripEndedEvent.getCost());
         } else if (event instanceof BikeReservedEvent) {
             BikeReservedEvent bikeReservedEvent = (BikeReservedEvent) event;
-            System.out.println("Pricing Service: Bike " + bikeReservedEvent.getBikeId() + " reserved by user " + bikeReservedEvent.getUserId());
+            log.debug("Bike reserved - bike: {}, user: {}", 
+                    bikeReservedEvent.getBikeId(), bikeReservedEvent.getUserId());
         }
     }
 }

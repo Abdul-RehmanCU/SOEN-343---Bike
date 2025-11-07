@@ -1,38 +1,37 @@
 package com.qwikride.service;
-
+import lombok.extern.slf4j.Slf4j;
 import com.qwikride.event.*;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class DashboardNotifier implements EventSubscriber {
     @Override
     public void onEvent(DomainEvent event) {
         if (event instanceof BikeReservedEvent) {
             BikeReservedEvent bikeReservedEvent = (BikeReservedEvent) event;
-            System.out.println("Dashboard Notifier: Bike " + bikeReservedEvent.getBikeId() + 
-                             " reserved by user " + bikeReservedEvent.getUserId() + 
-                             " at station " + bikeReservedEvent.getStationId());
+            log.info("Dashboard notification - Bike {} reserved by user {} at station {}", 
+                    bikeReservedEvent.getBikeId(), bikeReservedEvent.getUserId(), bikeReservedEvent.getStationId());
             // Push notification to dashboard for bike reservation
         } else if (event instanceof TripStartedEvent) {
             TripStartedEvent tripStartedEvent = (TripStartedEvent) event;
-            System.out.println("Dashboard Notifier: Trip started for bike " + tripStartedEvent.getBikeId() + 
-                             ", user " + tripStartedEvent.getUserId());
+            log.info("Dashboard notification - Trip started for bike {}, user {}", 
+                    tripStartedEvent.getBikeId(), tripStartedEvent.getUserId());
             // Push notification to dashboard for trip start
         } else if (event instanceof TripEndedEvent) {
             TripEndedEvent tripEndedEvent = (TripEndedEvent) event;
-            System.out.println("Dashboard Notifier: Trip ended for bike " + tripEndedEvent.getBikeId() + 
-                             ", user " + tripEndedEvent.getUserId() + 
-                             ", cost: $" + tripEndedEvent.getCost());
+            log.info("Dashboard notification - Trip ended for bike {}, user {}, cost: ${}", 
+                    tripEndedEvent.getBikeId(), tripEndedEvent.getUserId(), tripEndedEvent.getCost());
             // Push notification to dashboard for trip end
         } else if (event instanceof BikeMovedEvent) {
             BikeMovedEvent bikeMovedEvent = (BikeMovedEvent) event;
-            System.out.println("Dashboard Notifier: Bike " + bikeMovedEvent.getBikeId() + 
-                             " moved to station " + bikeMovedEvent.getNewStationId());
+            log.info("Dashboard notification - Bike {} moved to station {}", 
+                    bikeMovedEvent.getBikeId(), bikeMovedEvent.getNewStationId());
             // Push notification to dashboard for bike movement
         } else if (event instanceof ReservationExpiredEvent) {
             ReservationExpiredEvent reservationExpiredEvent = (ReservationExpiredEvent) event;
-            System.out.println("Dashboard Notifier: Reservation expired for bike " + reservationExpiredEvent.getBikeId() + 
-                             ", user " + reservationExpiredEvent.getUserId());
+            log.info("Dashboard notification - Reservation expired for bike {}, user {}", 
+                    reservationExpiredEvent.getBikeId(), reservationExpiredEvent.getUserId());
         }
     }
 }
