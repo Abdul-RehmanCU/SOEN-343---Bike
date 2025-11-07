@@ -200,6 +200,202 @@ UI --> User: Display result
 
 ---
 
+## 4. Rider Reserves and Checks Out Bike Flow
+
+Shows how a rider reserves a bike through the Dashboard UI and proceeds to checkout.
+
+```plantuml
+@startuml
+actor Rider
+participant "Dashboard" as Dashboard
+participant "MapDashboard" as MapUI
+participant "StationDetailsPanel" as Panel
+participant "API Service" as API
+participant "Bike Controller" as Controller
+participant "Bike Service" as Service
+participant "Bike Repository" as BikeRepo
+participant "Station Repository" as StationRepo
+participant "SystemConsole" as Console
+database "H2 Database" as DB
+
+Rider -> Dashboard: Navigate to /dashboard
+Dashboard -> Dashboard: Render DashboardHome
+
+Rider -> Dashboard: Click "Map View" card
+Dashboard -> MapUI: Switch to MapDashboard view
+
+MapUI -> API: GET /api/stations
+API -> Controller: getAllStations()
+Controller -> Service: getAllStations()
+Service -> StationRepo: findAll()
+StationRepo -> DB: Query stations
+DB --> StationRepo: Station records
+StationRepo --> Service: List<Station>
+Service --> Controller: List<Station>
+Controller --> API: 200 OK + stations
+API --> MapUI: Station data
+
+MapUI -> API: GET /api/bikes
+API -> Controller: getAllBikes()
+Controller -> Service: getAllBikes()
+Service -> BikeRepo: findAll()
+BikeRepo -> DB: Query bikes
+DB --> BikeRepo: Bike records
+BikeRepo --> Service: List<Bike>
+Service --> Controller: List<Bike>
+Controller --> API: 200 OK + bikes
+API --> MapUI: Bike data
+
+MapUI -> MapUI: Render map with station markers\n(color-coded by availability)
+MapUI --> Rider: Display interactive map
+
+Rider -> MapUI: Click station marker
+MapUI -> Panel: Open StationDetailsPanel(station, bikes)
+
+Panel -> Panel: Calculate available bikes\nRender dock grid
+Panel --> Rider: Show station details\n(bikes: 15/25, 10 free docks)
+
+Rider -> Panel: Click "Reserve Bike" button
+
+Panel -> API: POST /api/bikes/reserve\n{stationId, userId, expiresAfterMinutes: 15}
+API -> Controller: reserveBike(ReservationRequestDTO)
+
+Controller -> Service: reserveBike(stationId, userId, minutes)
+
+Service -> StationRepo: findById(stationId)
+StationRepo -> DB: Query station
+DB --> StationRepo: Station
+StationRepo --> Service: Station
+
+alt Station is OUT_OF_SERVICE
+    Service --> Controller: throw Exception
+    Controller --> API: 400 Bad Request
+    API --> Panel: Error response
+    Panel -> Console: addMessage("Cannot reserve from\nout-of-service station", ERROR)
+    Console --> Rider: Display error message
+else Station has available bikes
+    Service -> BikeRepo: findAvailableBikeAtStation(stationId)
+    BikeRepo -> DB: Query available bike
+    DB --> BikeRepo: Bike (AVAILABLE)
+    BikeRepo --> Service: Bike
+    
+    Service -> Service: bike.reserve(userId, 15)\nSet status = RESERVED\nSet reservationExpiresAt
+    
+    Service -> BikeRepo: save(bike)
+    BikeRepo -> DB: Update bike record
+    DB --> BikeRepo: Updated bike
+    BikeRepo --> Service: Bike
+    
+    Service --> Controller: Reserved Bike
+    Controller --> API: 200 OK + bike
+    API --> Panel: Success
+    
+    Panel -> MapUI: loadData() (refresh)
+    MapUI -> Console: addMessage("Bike reserved successfully\n(expires in 15 minutes)", SUCCESS)
+    Console --> Rider: Show success message
+    Panel -> Panel: Close panel
+end
+
+note right of Rider
+  Rider has 15 minutes
+  to checkout the bike
+  before reservation expires
+end note
+
+Rider -> MapUI: Locate reserved bike
+MapUI -> MapUI: Filter bikes by status=RESERVED\nand userId
+
+Rider -> Panel: Open station with reserved bike
+Panel --> Rider: Show bike details\n(Status: RESERVED)
+
+Rider -> Panel: Click bike or use "Checkout" action
+
+Panel -> API: POST /api/bikes/checkout\n{bikeId, userId}
+API -> Controller: checkoutBike(CheckoutRequestDTO)
+
+Controller -> Service: checkoutBike(bikeId, userId)
+
+Service -> BikeRepo: findById(bikeId)
+BikeRepo -> DB: Query bike
+DB --> BikeRepo: Bike (RESERVED)
+BikeRepo --> Service: Bike
+
+alt Bike not reserved by this user
+    Service --> Controller: throw Exception
+    Controller --> API: 403 Forbidden
+    API --> Panel: Error response
+    Panel -> Console: addMessage("Cannot checkout\nthis bike", ERROR)
+else Valid checkout
+    Service -> Service: bike.checkout(userId)\nSet status = IN_USE\nRecord startTime
+    
+    Service -> BikeRepo: save(bike)
+    BikeRepo -> DB: Update bike record
+    DB --> BikeRepo: Updated bike
+    BikeRepo --> Service: Bike
+    
+    Service --> Controller: Bike in use
+    Controller --> API: 200 OK + bike
+    API --> Panel: Success
+    
+    Panel -> MapUI: loadData() (refresh)
+    MapUI -> Console: addMessage("Bike checked out successfully\nEnjoy your ride!", SUCCESS)
+    Console --> Rider: Show success message
+    
+    Panel --> Rider: Display trip started\n(Bike ID, Start time)
+end
+
+@enduml
+```
+
+### Flow Description
+
+1. **Navigate to Dashboard**: Rider accesses the dashboard and sees the home view with cards
+2. **Switch to Map View**: Rider clicks "Map View" card to see interactive map
+3. **Load Map Data**: System fetches all stations and bikes, renders map with color-coded markers
+4. **Select Station**: Rider clicks a station marker to view details
+5. **View Station Details**: Panel shows dock grid, available bikes, and capacity
+6. **Reserve Bike**: Rider clicks "Reserve Bike" button
+   - System validates station is in service
+   - Finds an available bike at the station
+   - Changes bike status to RESERVED
+   - Sets 15-minute expiration timer
+7. **Confirmation**: Success message appears in system console
+8. **Checkout Bike**: Within 15 minutes, rider returns to reserved bike
+   - System validates rider owns the reservation
+   - Changes bike status to IN_USE
+   - Records trip start time
+9. **Trip Started**: Rider can now ride the bike
+
+### Business Rules
+
+- **DM-05**: Reservation disabled if bikesAvailable == 0 or station OUT_OF_SERVICE
+- **Reservation expires**: After 15 minutes, bike becomes AVAILABLE again
+- **Single reservation**: Rider can only have one active reservation at a time
+- **Checkout validation**: Only the rider who reserved can checkout that specific bike
+
+### Error Scenarios
+
+- If station is OUT_OF_SERVICE → Return 400 "Cannot reserve from out-of-service station"
+- If no bikes available → Return 400 "No bikes available at this station"
+- If rider already has reservation → Return 400 "Already have an active reservation"
+- If checkout wrong bike → Return 403 "Cannot checkout this bike"
+- If reservation expired → Return 400 "Reservation has expired"
+
+### Console Messages
+
+**Success Messages (Green):**
+- "System loaded successfully"
+- "Bike reserved successfully (expires in 15 minutes)"
+- "Bike checked out successfully. Enjoy your ride!"
+
+**Error Messages (Red):**
+- "Cannot reserve bike from out-of-service station"
+- "No bikes available at this station"
+- "Cannot checkout this bike"
+- "Reservation has expired"
+
+---
+
 ## Key Components
 
 ### Frontend
