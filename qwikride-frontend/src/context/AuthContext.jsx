@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AuthContext } from './AuthContext';
 
 export const AuthProvider = ({ children }) => {
@@ -26,8 +26,20 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = useCallback((updater) => {
+    setUser((previous) => {
+      const next = typeof updater === 'function' ? updater(previous) : updater;
+      if (next) {
+        localStorage.setItem('user', JSON.stringify(next));
+      } else {
+        localStorage.removeItem('user');
+      }
+      return next;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

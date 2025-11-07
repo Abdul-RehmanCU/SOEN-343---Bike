@@ -6,6 +6,7 @@ import com.qwikride.prc.pricing.domain.ChargeLine;
 import com.qwikride.prc.pricing.domain.FinalizedBill;
 import com.qwikride.prc.pricing.domain.TripFacts;
 import com.qwikride.prc.repository.LedgerEntryRepository;
+import com.qwikride.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,6 +31,9 @@ import static org.mockito.Mockito.when;
 class BillingLedgerServiceTest {
     @Mock
     private LedgerEntryRepository ledgerEntryRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private BillingLedgerService billingLedgerService;
@@ -70,6 +75,7 @@ class BillingLedgerServiceTest {
             persisted.setId(99L);
             return persisted;
         });
+        when(userRepository.findById(77L)).thenReturn(Optional.empty());
 
         LedgerEntry result = billingLedgerService.appendTripEntry(bill, tripFacts);
 

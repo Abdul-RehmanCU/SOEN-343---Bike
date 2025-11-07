@@ -2,6 +2,7 @@ package com.qwikride.model;
 
 import com.qwikride.prc.domain.MembershipStatus;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -40,6 +41,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MembershipStatus membershipStatus = MembershipStatus.NONE;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal pendingBalance = BigDecimal.ZERO;
 
     public enum UserRole {
         RIDER, OPERATOR

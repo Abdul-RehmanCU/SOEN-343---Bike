@@ -33,7 +33,7 @@ public class PricingPlanService {
                 .orElseThrow(() -> new IllegalArgumentException("Pricing plan not found"));
     }
 
-    private PricingPlanResponse toResponse(PricingPlanVersion version) {
+    public PricingPlanResponse toResponse(PricingPlanVersion version) {
         return new PricingPlanResponse(
                 version.getId(),
                 version.getPlanName(),

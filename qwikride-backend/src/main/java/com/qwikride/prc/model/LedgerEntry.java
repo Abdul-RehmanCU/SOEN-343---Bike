@@ -70,12 +70,21 @@ public class LedgerEntry {
     @Column(nullable = false)
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
+    @Column(length = 64)
+    private String paymentReference;
+
+    @Column
+    private LocalDateTime paymentProcessedAt;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "ledger_entry_charges", joinColumns = @JoinColumn(name = "ledger_entry_id"))
     private List<LedgerCharge> charges = new ArrayList<>();
 
     @Column(length = 128)
     private String summary;
+
+    @Column
+    private Long adjustmentOfEntryId;
 
     public boolean isImmutable() {
         return true;

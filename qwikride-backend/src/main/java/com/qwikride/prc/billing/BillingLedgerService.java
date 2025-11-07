@@ -9,6 +9,7 @@ import com.qwikride.prc.model.LedgerEntry;
 import com.qwikride.prc.pricing.domain.FinalizedBill;
 import com.qwikride.prc.pricing.domain.TripFacts;
 import com.qwikride.prc.repository.LedgerEntryRepository;
+import com.qwikride.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BillingLedgerService {
     private final LedgerEntryRepository ledgerEntryRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public LedgerEntry appendTripEntry(FinalizedBill bill, TripFacts tripFacts) {
@@ -43,7 +45,9 @@ public class BillingLedgerService {
         entry.setSummary(
                 String.format("%s • %d min • $%s", bill.getPlanName(), tripFacts.durationMinutes(), bill.getTotal()));
 
-        return ledgerEntryRepository.save(entry);
+        LedgerEntry saved = ledgerEntryRepository.save(entry);
+        adjustRiderBalance(tripFacts.getRiderId(), bill.getTotal());
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -103,6 +107,49 @@ public class BillingLedgerService {
                 entry.getTotal(),
                 entry.getPaymentStatus(),
                 charges,
-                entry.getSummary());
+                entry.getSummary(),
+                entry.getPaymentReference(),
+                entry.getPaymentProcessedAt(),
+                entry.getAdjustmentOfEntryId());
+    }
+
+    @Transactional
+    public LedgerEntry appendAdjustment(Long riderId,
+            LedgerEntry original,
+            FinalizedBill adjustmentBill,
+            String summaryNote) {
+        LedgerEntry adjustment = new LedgerEntry();
+        adjustment.setRiderId(riderId);
+        adjustment.setPlanVersionId(adjustmentBill.getPlanVersionId());
+        adjustment.setPlanName(adjustmentBill.getPlanName());
+        adjustment.setBikeId(original.getBikeId());
+        adjustment.setStartStationId(original.getStartStationId());
+        adjustment.setEndStationId(original.getEndStationId());
+        adjustment.setStartTime(original.getStartTime());
+        adjustment.setEndTime(original.getEndTime());
+        adjustment.setDurationMinutes(original.getDurationMinutes());
+        adjustment.setDistanceKm(original.getDistanceKm());
+        adjustment.setTotal(adjustmentBill.getTotal());
+        adjustment.setPaymentStatus(PaymentStatus.ADJUSTED);
+        adjustment.setPaymentProcessedAt(java.time.LocalDateTime.now());
+        adjustment.setCharges(adjustmentBill.getCharges().stream()
+                .map(line -> LedgerCharge.from(line.getCode(), line.getAmount(), line.safeMeta()))
+                .collect(Collectors.toList()));
+        adjustment.setSummary(summaryNote);
+        adjustment.setAdjustmentOfEntryId(original.getId());
+
+        LedgerEntry saved = ledgerEntryRepository.save(adjustment);
+        adjustRiderBalance(riderId, adjustmentBill.getTotal());
+        return saved;
+    }
+
+    private void adjustRiderBalance(Long riderId, java.math.BigDecimal delta) {
+        userRepository.findById(riderId).ifPresent(user -> {
+            java.math.BigDecimal current = user.getPendingBalance() == null
+                    ? java.math.BigDecimal.ZERO
+                    : user.getPendingBalance();
+            user.setPendingBalance(current.add(delta));
+            userRepository.save(user);
+        });
     }
 }

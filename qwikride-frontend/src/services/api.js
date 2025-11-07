@@ -66,6 +66,31 @@ export const prcService = {
   },
   getTripSummary: (ledgerEntryId) =>
     api.get(`/prc/billing/summary/${ledgerEntryId}`),
+  settlePayment: (ledgerEntryId, payload = {}) =>
+    api.post(`/prc/billing/settle/${ledgerEntryId}`, payload),
+  downloadReceipt: (ledgerEntryId) =>
+    api.get(`/prc/billing/receipt/${ledgerEntryId}`, { responseType: "blob" }),
+  exportLedger: (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.start) params.append("start", filters.start);
+    if (filters.end) params.append("end", filters.end);
+    const query = params.toString();
+    return api.get(`/prc/billing/export${query ? `?${query}` : ""}`, {
+      responseType: "blob",
+    });
+  },
+  submitDispute: (payload) => api.post("/prc/disputes", payload),
+  listDisputes: () => api.get("/prc/disputes"),
+  listOpenDisputes: () => api.get("/prc/disputes/open"),
+  resolveDispute: (ticketId, payload) =>
+    api.post(`/prc/disputes/${ticketId}/resolve`, payload),
+};
+
+export const pricingAdminService = {
+  listPlans: () => api.get("/prc/pricing/admin"),
+  createPlan: (payload) => api.post("/prc/pricing/admin", payload),
+  updatePlan: (planVersionId, payload) =>
+    api.put(`/prc/pricing/admin/${planVersionId}`, payload),
 };
 
 export default api;
