@@ -23,6 +23,7 @@ public class BikeService {
     private final EventBus eventBus;
     private final BikeLocationPort bikeLocationPort;
     private final BikeFactoryRegistry bikeFactoryRegistry;
+    private final PricingService pricingService;
 
     @Transactional
     @SuppressWarnings("null")
@@ -116,7 +117,7 @@ public class BikeService {
         incrementStationCount(returnStationId);
 
         // Calculate cost (simple pricing model)
-        double cost = durationMinutes * 0.1 + distanceKm * 0.5;
+        double cost = pricingService.calculateCost(durationMinutes, distanceKm);
         eventBus.publish(new TripEndedEvent(bikeId, userId, returnStationId, durationMinutes, distanceKm, cost));
         return bike;
     }
