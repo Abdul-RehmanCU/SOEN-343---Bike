@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PAGE_VARIANTS } from '../constants/animations';
+import { GridBackground, AnimatedBlob } from '../components';
 import { useAuth } from '../hooks/useAuth';
 import { prcService } from '../services/api';
 
@@ -60,30 +61,22 @@ const Home = () => {
       className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
     >
       <section className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:64px_64px] dark:bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)]" />
-
-        <motion.div
-          animate={{
-            x: [0, 80, 0],
-            y: [0, -60, 0],
-            scale: [1, 1.25, 1],
-            opacity: [0.4, 0.6, 0.4],
-          }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/4 right-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-gray-500/40 via-gray-400/30 to-transparent blur-3xl dark:from-gray-400/50 dark:via-gray-300/35"
+        <GridBackground gridSize="64px" />
+        
+        <AnimatedBlob 
+          position={{ top: '25%', right: '25%' }}
+          size="600px"
+          duration={14}
+          movement={{ x: [0, 80, 0], y: [0, -60, 0] }}
         />
-
-        <motion.div
-          animate={{
-            x: [0, -80, 0],
-            y: [0, 60, 0],
-            scale: [1.25, 1, 1.25],
-            opacity: [0.35, 0.55, 0.35],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute bottom-1/4 left-1/4 h-[550px] w-[550px] rounded-full bg-gradient-to-br from-gray-400/35 via-gray-500/28 to-transparent blur-3xl dark:from-gray-500/45 dark:via-gray-400/32"
+        
+        <AnimatedBlob 
+          position={{ bottom: '25%', left: '25%' }}
+          size="550px"
+          duration={18}
+          movement={{ x: [0, -80, 0], y: [0, 60, 0] }}
         />
-
+        
         {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
