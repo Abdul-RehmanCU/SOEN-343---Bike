@@ -55,56 +55,40 @@ public class BikeController {
 
     @PostMapping("/reserve")
     public ResponseEntity<Bike> reserveBike(@Valid @RequestBody BikeReservationRequestDTO request) {
-        try {
-            Bike bike = bikeService.reserveBike(
-                request.getStationId(), 
-                request.getUserId(), 
-                request.getExpiresAfterMinutes()
-            );
-            return ResponseEntity.ok(bike);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Bike bike = bikeService.reserveBike(
+            request.getStationId(), 
+            request.getUserId(), 
+            request.getExpiresAfterMinutes()
+        );
+        return ResponseEntity.ok(bike);
     }
 
     @PostMapping("/checkout")
     public ResponseEntity<Bike> checkoutBike(@Valid @RequestBody BikeCheckoutRequestDTO request) {
-        try {
-            Bike bike = bikeService.checkoutBike(request.getBikeId(), request.getUserId());
-            return ResponseEntity.ok(bike);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Bike bike = bikeService.checkoutBike(request.getBikeId(), request.getUserId());
+        return ResponseEntity.ok(bike);
     }
 
     @PostMapping("/return")
     public ResponseEntity<Bike> returnBike(@Valid @RequestBody BikeReturnRequestDTO request) {
-        try {
-            Bike bike = bikeService.returnBike(
-                request.getBikeId(), 
-                request.getReturnStationId(), 
-                request.getUserId(), 
-                request.getDurationMinutes(), 
-                request.getDistanceKm()
-            );
-            return ResponseEntity.ok(bike);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Bike bike = bikeService.returnBike(
+            request.getBikeId(), 
+            request.getReturnStationId(), 
+            request.getUserId(), 
+            request.getDurationMinutes(), 
+            request.getDistanceKm()
+        );
+        return ResponseEntity.ok(bike);
     }
 
     @PostMapping("/move")
     public ResponseEntity<Bike> moveBike(@Valid @RequestBody BikeMoveRequestDTO request) {
-        try {
-            Bike bike = bikeService.moveBike(
-                request.getBikeId(), 
-                request.getNewStationId(), 
-                request.getOperatorId()
-            );
-            return ResponseEntity.ok(bike);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Bike bike = bikeService.moveBike(
+            request.getBikeId(), 
+            request.getNewStationId(), 
+            request.getOperatorId()
+        );
+        return ResponseEntity.ok(bike);
     }
 
     @PostMapping("/expired-reservations/process")

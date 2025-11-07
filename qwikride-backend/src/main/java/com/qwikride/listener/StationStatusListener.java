@@ -18,7 +18,7 @@ public class StationStatusListener {
     @EventListener
     public void onStationStatusChanged(StationStatusChangedEvent ev) {
         log.info("Station {} status changed: {} -> {}",
-                ev.stationId(), ev.oldStatus(), ev.newStatus());
+                ev.getStationId(), ev.getOldStatus(), ev.getNewStatus());
         // TODO: add real reactions (cancel reservations, notify, metrics)
     }
 }
