@@ -1,15 +1,11 @@
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { PAGE_VARIANTS } from '../constants/animations';
+import { GridBackground, AnimatedBlob } from '../components';
 
 const Dashboard = () => {
   const { user } = useAuth();
-
-  const pageVariants = {
-    initial: { opacity: 0, x: -50 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 50 }
-  };
 
   const riderCards = [
     { 
@@ -60,35 +56,27 @@ const Dashboard = () => {
 
   return (
     <motion.div
-      variants={pageVariants}
+      variants={PAGE_VARIANTS}
       initial="initial"
       animate="animate"
       exit="exit"
       transition={{ duration: 0.4, ease: 'easeInOut' }}
       className="min-h-[calc(100vh-5rem)] px-4 sm:px-6 lg:px-8 py-16 relative overflow-hidden"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:48px_48px] dark:bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)]"></div>
+      <GridBackground />
       
-      <motion.div 
-        animate={{ 
-          x: [0, 60, 0],
-          y: [0, -45, 0],
-          scale: [1, 1.18, 1],
-          opacity: [0.35, 0.5, 0.35]
-        }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 right-1/4 w-[550px] h-[550px] bg-gradient-to-br from-gray-500/38 via-gray-400/28 to-transparent dark:from-gray-400/48 dark:via-gray-300/32 rounded-full blur-3xl"
+      <AnimatedBlob 
+        position={{ top: '0', right: '25%' }}
+        size="550px"
+        duration={12}
+        movement={{ x: [0, 60, 0], y: [0, -45, 0] }}
       />
       
-      <motion.div 
-        animate={{ 
-          x: [0, -60, 0],
-          y: [0, 45, 0],
-          scale: [1.18, 1, 1.18],
-          opacity: [0.3, 0.45, 0.3]
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-gray-400/33 via-gray-500/25 to-transparent dark:from-gray-500/43 dark:via-gray-400/30 rounded-full blur-3xl"
+      <AnimatedBlob 
+        position={{ bottom: '0', left: '25%' }}
+        size="500px"
+        duration={15}
+        movement={{ x: [0, -60, 0], y: [0, 45, 0] }}
       />
       
       <div className="max-w-7xl mx-auto relative z-10">
@@ -133,15 +121,8 @@ const Dashboard = () => {
               <div className="relative card h-full flex flex-col group cursor-pointer overflow-hidden">
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 dark:via-white/5 to-transparent"
-                  animate={{
-                    x: ['-100%', '100%'],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatDelay: 2,
-                    ease: "easeInOut"
-                  }}
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 3, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
                 />
                 
                 <div className="relative z-10">

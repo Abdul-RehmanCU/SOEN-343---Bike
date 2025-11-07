@@ -5,11 +5,11 @@ import api from '../services/api';
 
 const BikeManagement = () => {
   const { user } = useAuth();
+  const [error, setError] = useState('');
   const [bikes, setBikes] = useState([]);
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStation, setSelectedStation] = useState(null);
-  const [selectedBike, setSelectedBike] = useState(null);
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [reservationData, setReservationData] = useState({ stationId: '', userId: user?.id || 1, expiresAfterMinutes: 15 });
@@ -28,8 +28,9 @@ const BikeManagement = () => {
       ]);
       setBikes(bikesResponse.data);
       setStations(stationsResponse.data);
-    } catch (error) {
-      console.error('Error loading data:', error);
+      setError('');
+    } catch {
+      setError('Failed to load data. Please refresh the page.');
     } finally {
       setLoading(false);
     }
@@ -40,20 +41,20 @@ const BikeManagement = () => {
       await api.post('/bikes/reserve', reservationData);
       setShowReserveModal(false);
       setReservationData({ stationId: '', userId: user?.id || 1, expiresAfterMinutes: 15 });
+      setError('');
       loadData();
-    } catch (error) {
-      console.error('Error reserving bike:', error);
-      alert('Failed to reserve bike. Please try again.');
+    } catch {
+      setError('Failed to reserve bike. Please try again.');
     }
   };
 
   const checkoutBike = async (bikeId) => {
     try {
       await api.post('/bikes/checkout', { bikeId, userId: user?.id || 1 });
+      setError('');
       loadData();
-    } catch (error) {
-      console.error('Error checking out bike:', error);
-      alert('Failed to checkout bike. Please try again.');
+    } catch {
+      setError('Failed to checkout bike. Please try again.');
     }
   };
 
@@ -68,10 +69,10 @@ const BikeManagement = () => {
         durationMinutes,
         distanceKm
       });
+      setError('');
       loadData();
-    } catch (error) {
-      console.error('Error returning bike:', error);
-      alert('Failed to return bike. Please try again.');
+    } catch {
+      setError('Failed to return bike. Please try again.');
     }
   };
 
@@ -80,26 +81,23 @@ const BikeManagement = () => {
       await api.post('/bikes/move', moveData);
       setShowMoveModal(false);
       setMoveData({ bikeId: '', newStationId: '', operatorId: user?.id || 1 });
+      setError('');
       loadData();
-    } catch (error) {
-      console.error('Error moving bike:', error);
-      alert('Failed to move bike. Please try again.');
+    } catch {
+      setError('Failed to move bike. Please try again.');
     }
   };
 
   const createBike = async (type, stationId) => {
     try {
       await api.post('/bikes/create', { type, stationId });
+      setError('');
       loadData();
-    } catch (error) {
-      console.error('Error creating bike:', error);
-      alert('Failed to create bike. Please try again.');
+    } catch {
+      setError('Failed to create bike. Please try again.');
     }
   };
 
-  const getBikesByStation = (stationId) => {
-    return bikes.filter(bike => bike.stationId === stationId);
-  };
 
   const getAvailableBikesByStation = (stationId) => {
     return bikes.filter(bike => bike.stationId === stationId && bike.status === 'AVAILABLE');
@@ -135,6 +133,17 @@ const BikeManagement = () => {
           <p className="text-gray-600 dark:text-gray-400">
             Manage bike reservations, checkouts, returns, and rebalancing
           </p>
+          {error && (
+            <div className="mt-4 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-lg flex items-center justify-between">
+              <span>{error}</span>
+              <button 
+                onClick={() => setError('')}
+                className="ml-4 text-sm underline hover:no-underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Station Overview */}
