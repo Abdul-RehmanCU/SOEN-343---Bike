@@ -4,3 +4,6 @@ export { AnimatedBlob } from './AnimatedBlob';
 export { Alert } from './Alert';
 export { ErrorBoundary } from './ErrorBoundary';
 export { default as Navbar } from './Navbar';
+export { default as StationDetailsPanel } from './StationDetailsPanel';
+export { default as SystemConsole } from './SystemConsole';
+export { default as MapLegend } from './MapLegend';

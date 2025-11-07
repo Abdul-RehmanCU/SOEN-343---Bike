@@ -87,3 +87,30 @@
                 radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.02), transparent 50%);
   }
 }
+
+/* Leaflet Map Custom Styles */
+.leaflet-container {
+  @apply bg-gray-100 dark:bg-gray-900;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700;
+}
+
+.leaflet-popup-content {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+.leaflet-popup-tip {
+  @apply bg-white dark:bg-gray-800;
+}
+
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Ensure map tiles display correctly in dark mode */
+.dark .leaflet-tile {
+  filter: brightness(0.8) invert(1) contrast(1.2) hue-rotate(180deg);
+}

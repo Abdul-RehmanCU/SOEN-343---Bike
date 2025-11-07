@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { rideHistoryService } from '../services/api';
 import { format } from 'date-fns';
@@ -7,6 +8,7 @@ import { PAGE_VARIANTS } from '../constants/animations';
 
 const RideHistory = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [rideHistory, setRideHistory] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -119,6 +121,23 @@ const RideHistory = () => {
       transition={{ duration: 0.4 }}
       className="min-h-[calc(100vh-5rem)] px-4 sm:px-6 lg:px-8 py-8"
     >
+      {/* Back to Home Button */}
+      <motion.button
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        onClick={() => navigate('/')}
+        className="fixed top-24 right-6 z-[100] bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl px-4 py-2.5 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all group"
+      >
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-primary-900 dark:group-hover:text-gray-100 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-primary-900 dark:group-hover:text-gray-100 transition-colors">
+            Back to Home
+          </span>
+        </div>
+      </motion.button>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
