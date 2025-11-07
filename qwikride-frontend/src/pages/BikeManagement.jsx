@@ -14,8 +14,16 @@ const BikeManagement = () => {
   const [selectedStation, setSelectedStation] = useState(null);
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
-  const [reservationData, setReservationData] = useState({ stationId: '', userId: user?.id || 1, expiresAfterMinutes: 15 });
-  const [moveData, setMoveData] = useState({ bikeId: '', newStationId: '', operatorId: user?.id || 1 });
+  const [reservationData, setReservationData] = useState({ stationId: '', userId: '', expiresAfterMinutes: 15 });
+  const [moveData, setMoveData] = useState({ bikeId: '', newStationId: '', operatorId: '' });
+
+  // Update userId in forms when user changes
+  useEffect(() => {
+    if (user?.id) {
+      setReservationData(prev => ({ ...prev, userId: user.id }));
+      setMoveData(prev => ({ ...prev, operatorId: user.id }));
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     loadData();
@@ -40,63 +48,146 @@ const BikeManagement = () => {
 
   const reserveBike = async () => {
     try {
-      await api.post('/bikes/reserve', reservationData);
+      // Validate user is logged in
+      if (!user?.id) {
+        setError('Please log in to reserve a bike.');
+        return;
+      }
+
+      // Validate station is selected
+      if (!reservationData.stationId) {
+        setError('Please select a station.');
+        return;
+      }
+
+      // Ensure data types are correct - convert strings to numbers
+      const payload = {
+        stationId: Number(reservationData.stationId),
+        userId: Number(user.id),
+        expiresAfterMinutes: Number(reservationData.expiresAfterMinutes)
+      };
+
+      console.log('Reserving bike with payload:', payload); // Debug log
+      console.log('Payload details:', JSON.stringify(payload, null, 2)); // Show exact values
+
+      await api.post('/bikes/reserve', payload);
       setShowReserveModal(false);
-      setReservationData({ stationId: '', userId: user?.id || 1, expiresAfterMinutes: 15 });
+      setReservationData({ stationId: '', userId: user.id, expiresAfterMinutes: 15 });
       setError('');
       loadData();
-    } catch {
-      setError('Failed to reserve bike. Please try again.');
+    } catch (err) {
+      console.error('Reserve bike error:', err); // Debug log
+      console.error('Error response:', err.response?.data); // Show backend error
+      console.error('Error status:', err.response?.status); // Show status code
+      
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Failed to reserve bike. Please try again.';
+      setError(`Error: ${errorMessage}`);
     }
   };
 
   const checkoutBike = async (bikeId) => {
     try {
-      await api.post('/bikes/checkout', { bikeId, userId: user?.id || 1 });
+      // Validate user is logged in
+      if (!user?.id) {
+        setError('Please log in to checkout a bike.');
+        return;
+      }
+
+      // bikeId is a UUID string, userId is a Long number
+      const payload = { 
+        bikeId: String(bikeId), // Keep as string (UUID)
+        userId: Number(user.id) 
+      };
+      console.log('Checking out bike with payload:', payload);
+      console.log('Payload JSON:', JSON.stringify(payload, null, 2));
+
+      await api.post('/bikes/checkout', payload);
       setError('');
       loadData();
-    } catch {
-      setError('Failed to checkout bike. Please try again.');
+    } catch (err) {
+      console.error('Checkout bike error:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to checkout bike. Please try again.');
     }
   };
 
   const returnBike = async (bikeId) => {
     try {
+      // Validate user is logged in
+      if (!user?.id) {
+        setError('Please log in to return a bike.');
+        return;
+      }
+
       const durationMinutes = Math.random() * 60 + 10; // Simulate trip duration
       const distanceKm = Math.random() * 20 + 1; // Simulate trip distance
-      await api.post('/bikes/return', {
-        bikeId,
-        returnStationId: selectedStation?.id || stations[0]?.id,
-        userId: user?.id || 1,
-        durationMinutes,
-        distanceKm
-      });
+      
+      // bikeId is UUID string, IDs are numbers
+      const payload = {
+        bikeId: String(bikeId), // Keep as string (UUID)
+        returnStationId: Number(selectedStation?.id || stations[0]?.id),
+        userId: Number(user.id),
+        durationMinutes: Number(durationMinutes.toFixed(2)),
+        distanceKm: Number(distanceKm.toFixed(2))
+      };
+      
+      console.log('Returning bike with payload:', JSON.stringify(payload, null, 2));
+      await api.post('/bikes/return', payload);
       setError('');
       loadData();
-    } catch {
-      setError('Failed to return bike. Please try again.');
+    } catch (err) {
+      console.error('Return bike error:', err);
+      console.error('Error response:', err.response?.data);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to return bike. Please try again.');
     }
   };
 
   const moveBike = async () => {
     try {
-      await api.post('/bikes/move', moveData);
+      // Validate user is logged in
+      if (!user?.id) {
+        setError('Please log in to move bikes.');
+        return;
+      }
+
+      // Validate station is selected
+      if (!moveData.newStationId) {
+        setError('Please select a destination station.');
+        return;
+      }
+
+      // bikeId is UUID string, IDs are numbers
+      const payload = {
+        bikeId: String(moveData.bikeId), // Keep as string (UUID)
+        newStationId: Number(moveData.newStationId),
+        operatorId: Number(user.id)
+      };
+
+      console.log('Moving bike with payload:', JSON.stringify(payload, null, 2));
+      await api.post('/bikes/move', payload);
       setShowMoveModal(false);
-      setMoveData({ bikeId: '', newStationId: '', operatorId: user?.id || 1 });
+      setMoveData({ bikeId: '', newStationId: '', operatorId: user.id });
       setError('');
       loadData();
-    } catch {
-      setError('Failed to move bike. Please try again.');
+    } catch (err) {
+      console.error('Move bike error:', err);
+      console.error('Error response:', err.response?.data);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to move bike. Please try again.');
     }
   };
 
   const createBike = async (type, stationId) => {
     try {
-      await api.post('/bikes/create', { type, stationId });
+      const payload = { type, stationId: Number(stationId) };
+      console.log('Creating bike with payload:', payload);
+      await api.post('/bikes/create', payload);
       setError('');
       loadData();
-    } catch {
-      setError('Failed to create bike. Please try again.');
+    } catch (err) {
+      console.error('Create bike error:', err);
+      console.error('Error response:', err.response?.data);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to create bike. Please try again.');
     }
   };
 
@@ -215,7 +306,11 @@ const BikeManagement = () => {
                 <button
                   onClick={() => {
                     setSelectedStation(station);
-                    setReservationData({ ...reservationData, stationId: station.id });
+                    setReservationData({ 
+                      stationId: station.id,
+                      userId: user?.id || '',
+                      expiresAfterMinutes: 15 
+                    });
                     setShowReserveModal(true);
                   }}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -305,6 +400,14 @@ const BikeManagement = () => {
                           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors"
                         >
                           Checkout
+                        </button>
+                      )}
+                      {bike.status === 'RESERVED' && (
+                        <button
+                          onClick={() => checkoutBike(bike.id)}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                        >
+                          Checkout Reserved
                         </button>
                       )}
                       {bike.status === 'IN_USE' && (
