@@ -212,8 +212,10 @@ public class DataSeeder implements CommandLineRunner {
             // Create ride history entry
             LocalDateTime startTime = LocalDateTime.now().minusDays(random.nextInt(30)).minusHours(random.nextInt(24));
             double durationMinutes = 15 + random.nextDouble() * 60; // 15-75 minutes
-            double distanceKm = 2 + random.nextDouble() * 8; // 2-10 km
-            double cost = pricingService.calculateCost(durationMinutes, distanceKm);
+            double distanceKm = 2 + random.nextDouble() * 8; // 2-10 km// Simple cost calculation for sample data: base fee + per-minute rate
+            double baseFee = (bike.getType() == BikeType.E_BIKE) ? 3.00 : 2.00;
+            double perMinuteRate = 0.25;
+            double cost = baseFee + (durationMinutes * perMinuteRate);
 
             RideHistory rideHistory = RideHistory.builder()
                     .userId(rider.getId())
