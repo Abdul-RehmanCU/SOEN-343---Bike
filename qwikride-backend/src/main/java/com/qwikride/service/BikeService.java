@@ -23,7 +23,6 @@ public class BikeService {
     private final EventBus eventBus;
     private final BikeLocationPort bikeLocationPort;
     private final BikeFactoryRegistry bikeFactoryRegistry;
-    private final PricingService pricingService;
 
     @Transactional
     @SuppressWarnings("null")
@@ -31,7 +30,7 @@ public class BikeService {
         BikeFactory factory = bikeFactoryRegistry.getFactory(config.getType());
         Bike bike = factory.createBike(config);
         Bike savedBike = bikeRepository.save(bike);
-        
+
         // Update station count
         incrementStationCount(config.getStationId());
         
@@ -116,9 +115,8 @@ public class BikeService {
         // Update station count
         incrementStationCount(returnStationId);
 
-        // Calculate cost (simple pricing model)
-        double cost = pricingService.calculateCost(durationMinutes, distanceKm);
-        eventBus.publish(new TripEndedEvent(bikeId, userId, returnStationId, durationMinutes, distanceKm, cost));
+        // Publish trip completion event for pricing/billing (PricingService will calculate actual cost)
+        eventBus.publish(new TripEndedEvent(bikeId, userId, returnStationId, durationMinutes, distanceKm, 0.0));
         return bike;
     }
 
@@ -126,7 +124,7 @@ public class BikeService {
     public Bike moveBike(UUID bikeId, Long newStationId, Long operatorId) {
         Bike bike = getBikeByIdOrThrow(bikeId);
         Long oldStationId = bike.getStationId();
-        
+
         // Check if new station is active and has capacity
         BikeStation newStation = getStationByIdOrThrow(newStationId, "Destination station not found");
         validateStationForBikeReturn(newStation);
@@ -152,7 +150,7 @@ public class BikeService {
             if (bike.isReservationExpired()) {
                 bike.cancelReservation();
                 bikeRepository.save(bike);
-                
+
                 // Update station count
                 incrementStationCount(bike.getStationId());
                 

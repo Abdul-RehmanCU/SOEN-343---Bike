@@ -27,26 +27,22 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/bikes/station/*/available", "/api/bikes/station/*").permitAll()
-                        
-                        // Operator-only endpoints
-                        .requestMatchers("/api/bikes/create", "/api/bikes/move", "/api/bikes/expired-reservations/process").hasAuthority("OPERATOR")
+                        .requestMatchers("/api/auth/**", "/api/bikes/**", "/api/prc/pricing/**",
+                                "/h2-console/**")
+                        .permitAll()
                         .requestMatchers("/api/operator/**").hasAuthority("OPERATOR")
-                        
-                        // Authenticated user endpoints
-                        .requestMatchers("/api/bikes/**").authenticated()
+                        .requestMatchers("/api/prc/pricing/admin/**", "/api/prc/disputes/open",
+                                "/api/prc/disputes/*/resolve")
+                        .hasAuthority("OPERATOR")
+                        .requestMatchers("/api/history/**", "/api/prc/billing/**",
+                                "/api/prc/disputes/**")
+                        .authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-                .exceptionHandling(ex -> ex
-                        .accessDeniedHandler((req, res, excep) -> {
-                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            res.getWriter().write("Access Denied: " + excep.getMessage());
-                        }));
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
+        // Register JWT filter so incoming requests with Bearer tokens are authenticated
         http.addFilterBefore(jwtRequestFilter,
                 org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 

@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { motion } from 'framer-motion';
 import { PAGE_VARIANTS } from '../constants/animations';
 import { GridBackground, AnimatedBlob, LoadingSpinner, Alert } from '../components';
+import GuestHomeLink from '../components/GuestHomeLink';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -46,8 +47,14 @@ const Login = () => {
       transition={{ duration: 0.4, ease: 'easeInOut' }}
       className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden"
     >
-      <GridBackground />
-      <AnimatedBlob position={{ top: '33%', right: '33%' }} movement={{ x: [0, 30, 0], y: [0, -20, 0] }} />
+      <GuestHomeLink className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6" />
+      <GridBackground gridSize="48px" />
+      <AnimatedBlob 
+        position={{ top: '33%', right: '33%' }} 
+        size="450px"
+        duration={10}
+        movement={{ x: [0, 30, 0], y: [0, -20, 0] }} 
+      />
       
       <div className="max-w-lg w-full relative z-10">
         <motion.div

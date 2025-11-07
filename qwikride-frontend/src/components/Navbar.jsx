@@ -48,6 +48,37 @@ const Navbar = () => {
               QwikRide
             </motion.span>
           </Link>
+
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <Link
+              to="/pricing"
+              className="transition-colors hover:text-primary-900 dark:hover:text-white"
+            >
+              Pricing
+            </Link>
+            {user && (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="transition-colors hover:text-primary-900 dark:hover:text-white"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/bikes"
+                  className="transition-colors hover:text-primary-900 dark:hover:text-white"
+                >
+                  Bikes
+                </Link>
+                <Link
+                  to="/history"
+                  className="transition-colors hover:text-primary-900 dark:hover:text-white"
+                >
+                  History
+                </Link>
+              </>
+            )}
+          </div>
           
           <div className="flex items-center space-x-4">
             <motion.button

@@ -1,39 +1,63 @@
 package com.qwikride.service;
 
-import com.qwikride.event.*;
+import com.qwikride.event.BikeReservedEvent;
+import com.qwikride.event.DomainEvent;
+import com.qwikride.event.EventSubscriber;
+import com.qwikride.event.TripEndedEvent;
+import com.qwikride.prc.billing.BillingLedgerService;
+import com.qwikride.prc.dto.TripSummaryResponse;
+import com.qwikride.prc.model.LedgerEntry;
+import com.qwikride.prc.pricing.PricingEngine;
+import com.qwikride.prc.pricing.TripFactsFactory;
+import com.qwikride.prc.pricing.domain.FinalizedBill;
+import com.qwikride.prc.pricing.domain.TripFacts;
+import com.qwikride.prc.pricing.selector.SelectionInput;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PricingService implements EventSubscriber {
-    // Pricing constants
-    private static final double RATE_PER_MINUTE = 0.1;
-    private static final double RATE_PER_KM = 0.5;
-
-    /**
-     * Calculates the cost of a bike ride.
-     * 
-     * @param durationMinutes Duration of the ride in minutes
-     * @param distanceKm Distance traveled in kilometers
-     * @return Total cost of the ride
-     */
-    public double calculateCost(double durationMinutes, double distanceKm) {
-        return (durationMinutes * RATE_PER_MINUTE) + (distanceKm * RATE_PER_KM);
-    }
+    private final PricingEngine pricingEngine;
+    private final TripFactsFactory tripFactsFactory;
+    private final BillingLedgerService billingLedgerService;
 
     @Override
     public void onEvent(DomainEvent event) {
-        if (event instanceof TripEndedEvent) {
-            TripEndedEvent tripEndedEvent = (TripEndedEvent) event;
-            log.info("Trip cost calculated - bike: {}, user: {}, cost: ${}", 
-                    tripEndedEvent.getBikeId(), tripEndedEvent.getUserId(), tripEndedEvent.getCost());
-        } else if (event instanceof BikeReservedEvent) {
-            BikeReservedEvent bikeReservedEvent = (BikeReservedEvent) event;
-            log.debug("Bike reserved - bike: {}, user: {}", 
-                    bikeReservedEvent.getBikeId(), bikeReservedEvent.getUserId());
+        if (event instanceof TripEndedEvent tripEndedEvent) {
+            handleTripEnded(tripEndedEvent);
+        } else if (event instanceof BikeReservedEvent bikeReservedEvent) {
+            log.debug("Pricing Service: Bike {} reserved by user {}", bikeReservedEvent.getBikeId(),
+                    bikeReservedEvent.getUserId());
         }
+    }
+
+    private void handleTripEnded(TripEndedEvent event) {
+        TripFacts tripFacts = tripFactsFactory.buildTripFacts(
+                event.getBikeId(),
+                event.getUserId(),
+                event.getReturnStationId(),
+                event.getDurationMinutes(),
+                event.getDistanceKm());
+
+        SelectionInput selectionInput = tripFactsFactory.buildSelectionInput(
+                tripFacts.getEndTime(),
+                tripFacts.getMembershipStatus(),
+                tripFacts.getCityId());
+
+        FinalizedBill bill = pricingEngine.price(tripFacts, selectionInput);
+        LedgerEntry ledgerEntry = billingLedgerService.appendTripEntry(bill, tripFacts);
+
+        // Ensure downstream listeners (history, UI) see deterministic cost
+        event.setCost(bill.getTotal().doubleValue());
+
+        TripSummaryResponse summary = billingLedgerService.buildSummary(ledgerEntry);
+        log.info("Trip summary computed for rider {} using plan {}: total={}, charges={}",
+                tripFacts.getRiderId(),
+                summary.planName(),
+                summary.total(),
+                summary.charges().size());
     }
 }

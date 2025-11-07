@@ -38,10 +38,10 @@ public class RideHistoryService {
     public List<RideHistoryResponseDTO> getUserRideHistory(Long userId, RideHistoryFilterDTO filter) {
         RideHistoryFilterCriteria criteria = buildFilterCriteria(userId, filter);
         Specification<RideHistory> spec = buildSpecification(criteria);
-        
+
         Pageable pageable = createPageable(filter);
         Page<RideHistory> historyPage = rideHistoryRepository.findAll(spec, pageable);
-        
+
         return historyPage.getContent().stream()
                 .map(RideHistoryResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -53,10 +53,10 @@ public class RideHistoryService {
     public List<RideHistoryResponseDTO> getAllRideHistories(RideHistoryFilterDTO filter) {
         RideHistoryFilterCriteria criteria = buildFilterCriteria(null, filter);
         Specification<RideHistory> spec = buildSpecification(criteria);
-        
+
         Pageable pageable = createPageable(filter);
         Page<RideHistory> historyPage = rideHistoryRepository.findAll(spec, pageable);
-        
+
         return historyPage.getContent().stream()
                 .map(RideHistoryResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -76,7 +76,7 @@ public class RideHistoryService {
      */
     public RideStatisticsDTO getRideStatistics(Long userId) {
         List<RideHistory> rides = rideHistoryRepository.findByUserIdOrderByStartTimeDesc(userId);
-        
+
         if (rides.isEmpty()) {
             return RideStatisticsDTO.builder()
                     .totalRides(0L)
@@ -154,7 +154,7 @@ public class RideHistoryService {
                 .status(RideHistory.RideStatus.IN_PROGRESS)
                 .bikeType(bikeType)
                 .build();
-        
+
         return rideHistoryRepository.save(rideHistory);
     }
 
@@ -162,8 +162,8 @@ public class RideHistoryService {
      * Update ride history when trip ends.
      */
     @Transactional
-    public RideHistory updateRideHistory(Long rideHistoryId, Long endStationId, 
-                                        Double durationMinutes, Double distanceKm, Double cost) {
+    public RideHistory updateRideHistory(Long rideHistoryId, Long endStationId,
+            Double durationMinutes, Double distanceKm, Double cost) {
         RideHistory rideHistory = rideHistoryRepository.findById(rideHistoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Ride history not found"));
 
@@ -181,10 +181,8 @@ public class RideHistoryService {
      * Find in-progress ride for a user.
      */
     public Optional<RideHistory> findInProgressRide(Long userId) {
-        List<RideHistory> inProgress = rideHistoryRepository.findByStatus(RideHistory.RideStatus.IN_PROGRESS);
-        return inProgress.stream()
-                .filter(r -> r.getUserId().equals(userId))
-                .findFirst();
+        return rideHistoryRepository.findFirstByUserIdAndStatusOrderByStartTimeDesc(userId,
+                RideHistory.RideStatus.IN_PROGRESS);
     }
 
     /**
@@ -249,10 +247,10 @@ public class RideHistoryService {
         int page = (filter != null && filter.getPage() != null) ? filter.getPage() : 0;
         int size = (filter != null && filter.getSize() != null) ? filter.getSize() : 20;
         String sortBy = (filter != null && filter.getSortBy() != null) ? filter.getSortBy() : "startTime";
-        Sort.Direction direction = (filter != null && "ASC".equalsIgnoreCase(filter.getSortDirection())) 
-                ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort.Direction direction = (filter != null && "ASC".equalsIgnoreCase(filter.getSortDirection()))
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
 
         return PageRequest.of(page, size, Sort.by(direction, sortBy));
     }
 }
-
