@@ -17,11 +17,12 @@ public class RegistrationService {
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
-        
+
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
-        
+
+
         User user = new User();
         user.setFullName(dto.getFullName());
         user.setAddress(dto.getAddress());
@@ -30,7 +31,7 @@ public class RegistrationService {
         user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         user.setPaymentInfo(dto.getPaymentInfo());
         user.setRole(User.UserRole.RIDER);
-        
+
         return userRepository.save(user);
     }
 }
