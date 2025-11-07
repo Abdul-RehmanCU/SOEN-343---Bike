@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { rideHistoryService } from '../services/api';
 import { format } from 'date-fns';
+import { PAGE_VARIANTS } from '../constants/animations';
 
 const RideHistory = () => {
   const { user } = useAuth();
@@ -22,13 +23,14 @@ const RideHistory = () => {
       fetchRideHistory();
       fetchStatistics();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Re-fetch when filters change
   useEffect(() => {
     if (user?.id) {
       fetchRideHistory();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchRideHistory = async () => {
@@ -41,12 +43,9 @@ const RideHistory = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching ride history for user ID:', user.id);
       const response = await rideHistoryService.getUserRideHistory(user.id, filters);
-      console.log('Ride history response:', response.data);
       setRideHistory(response.data || []);
     } catch (err) {
-      console.error('Error fetching ride history:', err);
       if (err.response?.status === 403) {
         setError('Access denied. Please log in again.');
       } else if (err.response?.status === 404) {
@@ -69,9 +68,8 @@ const RideHistory = () => {
     try {
       const response = await rideHistoryService.getRideStatistics(user.id);
       setStatistics(response.data);
-    } catch (err) {
-      console.error('Error fetching statistics:', err);
-      // Don't show error for statistics, it's not critical
+    } catch {
+      // Statistics are optional, don't show error
     }
   };
 
@@ -112,15 +110,9 @@ const RideHistory = () => {
     return `${mins}m`;
   };
 
-  const pageVariants = {
-    initial: { opacity: 0, x: -50 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 50 }
-  };
-
   return (
     <motion.div
-      variants={pageVariants}
+      variants={PAGE_VARIANTS}
       initial="initial"
       animate="animate"
       exit="exit"
@@ -380,4 +372,3 @@ const RideHistory = () => {
 };
 
 export default RideHistory;
-

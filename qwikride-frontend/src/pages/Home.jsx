@@ -1,47 +1,35 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
+import { PAGE_VARIANTS } from '../constants/animations';
+import { GridBackground, AnimatedBlob } from '../components';
 
 const Home = () => {
   const { user } = useAuth();
 
-  const pageVariants = {
-    initial: { opacity: 0, x: -50 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 50 }
-  };
-
   return (
     <motion.div
-      variants={pageVariants}
+      variants={PAGE_VARIANTS}
       initial="initial"
       animate="animate"
       exit="exit"
       transition={{ duration: 0.4, ease: 'easeInOut' }}
       className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:64px_64px] dark:bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)]"></div>
+      <GridBackground gridSize="64px" />
       
-      <motion.div 
-        animate={{ 
-          x: [0, 80, 0],
-          y: [0, -60, 0],
-          scale: [1, 1.25, 1],
-          opacity: [0.4, 0.6, 0.4]
-        }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-gray-500/40 via-gray-400/30 to-transparent dark:from-gray-400/50 dark:via-gray-300/35 rounded-full blur-3xl"
+      <AnimatedBlob 
+        position={{ top: '25%', right: '25%' }}
+        size="600px"
+        duration={14}
+        movement={{ x: [0, 80, 0], y: [0, -60, 0] }}
       />
       
-      <motion.div 
-        animate={{ 
-          x: [0, -80, 0],
-          y: [0, 60, 0],
-          scale: [1.25, 1, 1.25],
-          opacity: [0.35, 0.55, 0.35]
-        }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-1/4 left-1/4 w-[550px] h-[550px] bg-gradient-to-br from-gray-400/35 via-gray-500/28 to-transparent dark:from-gray-500/45 dark:via-gray-400/32 rounded-full blur-3xl"
+      <AnimatedBlob 
+        position={{ bottom: '25%', left: '25%' }}
+        size="550px"
+        duration={18}
+        movement={{ x: [0, -80, 0], y: [0, 60, 0] }}
       />
       
       {[...Array(12)].map((_, i) => (
@@ -134,7 +122,6 @@ const Home = () => {
             </motion.div>
           )}
         </motion.div>
-
       </div>
     </motion.div>
   );

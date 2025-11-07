@@ -2,9 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { ThemeProvider } from './context/ThemeContext.jsx';
-import { useTheme } from './hooks/useTheme.js';
 import { AnimatePresence } from 'framer-motion';
-import Navbar from './components/Navbar';
+import { ErrorBoundary, Navbar } from './components';
 import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -66,18 +65,20 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-500">
-            <Navbar />
-            <div className="pt-20">
-              <AnimatedRoutes />
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-500">
+              <Navbar />
+              <div className="pt-20">
+                <AnimatedRoutes />
+              </div>
             </div>
-          </div>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

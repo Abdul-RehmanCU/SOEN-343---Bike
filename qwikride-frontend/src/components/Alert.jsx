@@ -1,0 +1,13 @@
+export const Alert = ({ type = 'error', children, className = '' }) => {
+    const styles = {
+      error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400',
+      success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400',
+      warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400',
+    };
+    
+    return (
+      <div className={`mb-6 p-3 border rounded-lg text-sm ${styles[type]} ${className}`}>
+        {children}
+      </div>
+    );
+  };
