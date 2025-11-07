@@ -25,10 +25,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         // Skip JWT processing for certain paths that should be permitAll
         String path = request.getRequestURI();
-        if (path.startsWith("/api/bikes/") || path.startsWith("/api/auth/")) {
+        if (path.startsWith("/api/auth/") || 
+            path.matches("/api/bikes/station/[^/]+(/available)?")) {
             filterChain.doFilter(request, response);
             return;
-        }
+}
         
         final String authHeader = request.getHeader("Authorization");
 
