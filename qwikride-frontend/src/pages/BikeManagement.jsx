@@ -191,6 +191,22 @@ const BikeManagement = () => {
     }
   };
 
+  const toggleStationStatus = async (stationId) => {
+    try {
+      const station = stations.find(s => s.id === stationId);
+      if (!station) return;
+      
+      const newStatus = station.status === 'ACTIVE' ? 'OUT_OF_SERVICE' : 'ACTIVE';
+      await api.patch(`/operator/stations/${stationId}/status`, { status: newStatus });
+      
+      setError('');
+      loadData();
+    } catch (err) {
+      console.error('Toggle station status error:', err);
+      console.error('Error response:', err.response?.data);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update station status. Please try again.');
+    }
+  };
 
   const getAvailableBikesByStation = (stationId) => {
     return bikes.filter(bike => bike.stationId === stationId && bike.status === 'AVAILABLE');
@@ -319,20 +335,32 @@ const BikeManagement = () => {
                 </button>
                 
                 {user?.role === 'OPERATOR' && (
-                  <div className="grid grid-cols-2 gap-2">
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => createBike('STANDARD', station.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                      >
+                        Add Standard
+                      </button>
+                      <button
+                        onClick={() => createBike('E_BIKE', station.id)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                      >
+                        Add E-Bike
+                      </button>
+                    </div>
                     <button
-                      onClick={() => createBike('STANDARD', station.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                      onClick={() => toggleStationStatus(station.id)}
+                      className={`w-full ${
+                        station.status === 'ACTIVE'
+                          ? 'bg-orange-600 hover:bg-orange-700'
+                          : 'bg-emerald-600 hover:bg-emerald-700'
+                      } text-white px-3 py-2 rounded-lg text-sm transition-colors`}
                     >
-                      Add Standard
+                      {station.status === 'ACTIVE' ? 'Mark Out of Service' : 'Mark Active'}
                     </button>
-                    <button
-                      onClick={() => createBike('E_BIKE', station.id)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
-                    >
-                      Add E-Bike
-                    </button>
-                  </div>
+                  </>
                 )}
               </div>
             </motion.div>
