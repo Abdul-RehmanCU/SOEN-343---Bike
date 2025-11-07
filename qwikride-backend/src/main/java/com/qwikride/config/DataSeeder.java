@@ -4,6 +4,7 @@ import com.qwikride.model.*;
 import com.qwikride.repository.*;
 import com.qwikride.factory.BikeFactory;
 import com.qwikride.factory.BikeFactoryRegistry;
+import com.qwikride.service.PricingService;
 import com.qwikride.service.RideHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final BikeFactoryRegistry bikeFactoryRegistry;
     private final RideHistoryService rideHistoryService;
+    private final PricingService pricingService;
 
     @Override
     @Transactional
@@ -171,6 +174,7 @@ public class DataSeeder implements CommandLineRunner {
         return bikes;
     }
 
+    @SuppressWarnings("null")
     private void createSampleRideHistory(List<User> riders, List<Bike> bikes, List<BikeStation> stations) {
         if (riders.isEmpty() || bikes.isEmpty() || stations.isEmpty()) {
             log.warn("⚠️  Cannot create ride history - missing required data");
@@ -195,7 +199,7 @@ public class DataSeeder implements CommandLineRunner {
             LocalDateTime startTime = LocalDateTime.now().minusDays(random.nextInt(30)).minusHours(random.nextInt(24));
             double durationMinutes = 15 + random.nextDouble() * 60; // 15-75 minutes
             double distanceKm = 2 + random.nextDouble() * 8; // 2-10 km
-            double cost = durationMinutes * 0.1 + distanceKm * 0.5;
+            double cost = pricingService.calculateCost(durationMinutes, distanceKm);
 
             RideHistory rideHistory = RideHistory.builder()
                     .userId(rider.getId())
