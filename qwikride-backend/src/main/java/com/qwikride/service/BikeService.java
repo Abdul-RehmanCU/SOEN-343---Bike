@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,17 +25,14 @@ public class BikeService {
     private final BikeFactoryRegistry bikeFactoryRegistry;
 
     @Transactional
+    @SuppressWarnings("null")
     public Bike createBike(BikeConfig config) {
         BikeFactory factory = bikeFactoryRegistry.getFactory(config.getType());
         Bike bike = factory.createBike(config);
         Bike savedBike = bikeRepository.save(bike);
         
         // Update station count
-        BikeStation station = bikeStationRepository.findById(config.getStationId()).orElse(null);
-        if (station != null) {
-            station.setCurrentBikeCount(station.getCurrentBikeCount() + 1);
-            bikeStationRepository.save(station);
-        }
+        incrementStationCount(config.getStationId());
         
         return savedBike;
     }
@@ -44,12 +40,8 @@ public class BikeService {
     @Transactional
     public Bike reserveBike(Long stationId, Long userId, int expiresAfterMinutes) {
         // Check if station is active and has available bikes
-        BikeStation station = bikeStationRepository.findById(stationId)
-                .orElseThrow(() -> new IllegalArgumentException("Station not found"));
-        
-        if (station.getStatus() != BikeStation.StationStatus.ACTIVE) {
-            throw new IllegalStateException("Station is out of service");
-        }
+        BikeStation station = getStationByIdOrThrow(stationId, "Station not found");
+        validateStationActive(station);
 
         if (station.getCurrentBikeCount() <= 0) {
             throw new IllegalStateException("No bikes available at this station");
@@ -72,8 +64,7 @@ public class BikeService {
         bikeRepository.save(bike);
 
         // Update station count
-        station.setCurrentBikeCount(station.getCurrentBikeCount() - 1);
-        bikeStationRepository.save(station);
+        decrementStationCount(stationId);
 
         eventBus.publish(new BikeReservedEvent(bike.getId(), userId, stationId));
         return bike;
@@ -81,8 +72,7 @@ public class BikeService {
 
     @Transactional
     public Bike checkoutBike(UUID bikeId, Long userId) {
-        Bike bike = bikeRepository.findById(bikeId)
-                .orElseThrow(() -> new IllegalArgumentException("Bike not found"));
+        Bike bike = getBikeByIdOrThrow(bikeId);
 
         if (bike.getStatus() == BikeStatus.RESERVED && !bike.getReservedByUserId().equals(userId)) {
             throw new IllegalStateException("Bike is reserved by another user");
@@ -108,32 +98,22 @@ public class BikeService {
 
     @Transactional
     public Bike returnBike(UUID bikeId, Long returnStationId, Long userId, double durationMinutes, double distanceKm) {
-        Bike bike = bikeRepository.findById(bikeId)
-                .orElseThrow(() -> new IllegalArgumentException("Bike not found"));
+        Bike bike = getBikeByIdOrThrow(bikeId);
 
         if (bike.getStatus() != BikeStatus.IN_USE || !bike.getCurrentUserId().equals(userId)) {
             throw new IllegalStateException("Bike is not currently checked out by this user");
         }
 
         // Check if return station is active and has capacity
-        BikeStation returnStation = bikeStationRepository.findById(returnStationId)
-                .orElseThrow(() -> new IllegalArgumentException("Return station not found"));
-
-        if (returnStation.getStatus() != BikeStation.StationStatus.ACTIVE) {
-            throw new IllegalStateException("Return station is out of service");
-        }
-
-        if (returnStation.getCurrentBikeCount() >= returnStation.getCapacity()) {
-            throw new IllegalStateException("Return station is full");
-        }
+        BikeStation returnStation = getStationByIdOrThrow(returnStationId, "Return station not found");
+        validateStationForBikeReturn(returnStation);
 
         bike.returnBike(returnStationId);
         bikeRepository.save(bike);
         bikeLocationPort.lockBike(bikeId);
 
         // Update station count
-        returnStation.setCurrentBikeCount(returnStation.getCurrentBikeCount() + 1);
-        bikeStationRepository.save(returnStation);
+        incrementStationCount(returnStationId);
 
         // Calculate cost (simple pricing model)
         double cost = durationMinutes * 0.1 + distanceKm * 0.5;
@@ -143,22 +123,12 @@ public class BikeService {
 
     @Transactional
     public Bike moveBike(UUID bikeId, Long newStationId, Long operatorId) {
-        Bike bike = bikeRepository.findById(bikeId)
-                .orElseThrow(() -> new IllegalArgumentException("Bike not found"));
-
+        Bike bike = getBikeByIdOrThrow(bikeId);
         Long oldStationId = bike.getStationId();
         
         // Check if new station is active and has capacity
-        BikeStation newStation = bikeStationRepository.findById(newStationId)
-                .orElseThrow(() -> new IllegalArgumentException("Destination station not found"));
-
-        if (newStation.getStatus() != BikeStation.StationStatus.ACTIVE) {
-            throw new IllegalStateException("Destination station is out of service");
-        }
-
-        if (newStation.getCurrentBikeCount() >= newStation.getCapacity()) {
-            throw new IllegalStateException("Destination station is full");
-        }
+        BikeStation newStation = getStationByIdOrThrow(newStationId, "Destination station not found");
+        validateStationForBikeReturn(newStation);
 
         if (oldStationId.equals(newStationId)) {
             throw new IllegalStateException("Cannot move bike to the same station");
@@ -167,17 +137,8 @@ public class BikeService {
         bike.moveToStation(newStationId);
         bikeRepository.save(bike);
 
-        // Update station counts
-        if (oldStationId != null) {
-            BikeStation oldStation = bikeStationRepository.findById(oldStationId).orElse(null);
-            if (oldStation != null) {
-                oldStation.setCurrentBikeCount(Math.max(0, oldStation.getCurrentBikeCount() - 1));
-                bikeStationRepository.save(oldStation);
-            }
-        }
-
-        newStation.setCurrentBikeCount(newStation.getCurrentBikeCount() + 1);
-        bikeStationRepository.save(newStation);
+        decrementStationCount(oldStationId);
+        incrementStationCount(newStationId);
 
         eventBus.publish(new BikeMovedEvent(bikeId, oldStationId, newStationId, operatorId));
         return bike;
@@ -192,13 +153,7 @@ public class BikeService {
                 bikeRepository.save(bike);
                 
                 // Update station count
-                if (bike.getStationId() != null) {
-                    BikeStation station = bikeStationRepository.findById(bike.getStationId()).orElse(null);
-                    if (station != null) {
-                        station.setCurrentBikeCount(station.getCurrentBikeCount() + 1);
-                        bikeStationRepository.save(station);
-                    }
-                }
+                incrementStationCount(bike.getStationId());
                 
                 eventBus.publish(new ReservationExpiredEvent(bike.getId(), bike.getReservedByUserId()));
             }
@@ -214,6 +169,9 @@ public class BikeService {
     }
 
     public Optional<Bike> getBikeById(UUID bikeId) {
+        if (bikeId == null) {
+            return Optional.empty();
+        }
         return bikeRepository.findById(bikeId);
     }
 
@@ -224,4 +182,56 @@ public class BikeService {
     public List<Bike> getBikesByStation(Long stationId) {
         return bikeRepository.findByStationId(stationId);
     }
+
+    private Bike getBikeByIdOrThrow(UUID bikeId) {
+        if (bikeId == null) {
+            throw new IllegalArgumentException("Bike ID cannot be null");
+        }
+        return bikeRepository.findById(bikeId)
+                .orElseThrow(() -> new IllegalArgumentException("Bike not found"));
+    }
+
+    private BikeStation getStationByIdOrThrow(Long stationId, String errorMessage) {
+        if (stationId == null) {
+            throw new IllegalArgumentException("Station ID cannot be null");
+        }
+        return bikeStationRepository.findById(stationId)
+                .orElseThrow(() -> new IllegalArgumentException(errorMessage));
+    }
+
+    private void validateStationActive(BikeStation station) {
+        if (station.getStatus() != BikeStation.StationStatus.ACTIVE) {
+            throw new IllegalStateException("Station is out of service");
+        }
+    }
+
+    private void validateStationCapacity(BikeStation station) {
+        if (station.getCurrentBikeCount() >= station.getCapacity()) {
+            throw new IllegalStateException("Station is full");
+        }
+    }
+
+    private void validateStationForBikeReturn(BikeStation station) {
+        validateStationActive(station);
+        validateStationCapacity(station);
+    }
+    
+    private void incrementStationCount(Long stationId) {
+        if (stationId != null) {
+            bikeStationRepository.findById(stationId).ifPresent(station -> {
+                station.setCurrentBikeCount(station.getCurrentBikeCount() + 1);
+                bikeStationRepository.save(station);
+            });
+        }
+    }
+
+    private void decrementStationCount(Long stationId) {
+        if (stationId != null) {
+            bikeStationRepository.findById(stationId).ifPresent(station -> {
+                station.setCurrentBikeCount(Math.max(0, station.getCurrentBikeCount() - 1));
+                bikeStationRepository.save(station);
+            });
+        }
+    }
+
 }
